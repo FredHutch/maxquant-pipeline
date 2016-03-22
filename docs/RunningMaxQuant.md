@@ -1,4 +1,4 @@
-# Running MaxQuant
+# Conducting and Analysis with MaxQuant
 
 This document shows how to manually run a small analysis job using MaxQuant.
 
@@ -6,13 +6,28 @@ This document shows how to manually run a small analysis job using MaxQuant.
 
 Running a MaxQuant job requires mass spectrometry data in *.mzXML format. In this example we'll be conducting an analysis on two files:
 
-* JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F01.mzXML
-* JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F02.mzXML
+* **JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F01.mzXML**
+* **JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F02.mzXML**
 
 In addition to the mzXML files, you'll also need a FASTA formatted sequence file. In this example we'll use the following sequence file:
 
-* uniprot_taxonomy_9606_Reviewed.fasta
+* **uniprot_taxonomy_9606_Reviewed.fasta**
 
-After you have the mass spec data (mzXML) and the sequence file (FASTA) that you want to use you are ready to start MaxQuant and configure your analysis.
+For this analysis all of the above files are in a directory structure that looks like the following:
+
+```
+C:\MQ-EXAMPLE
++---Fasta
+|       uniprot_taxonomy_9606_Reviewed.fasta
+|
+\---MZXML
+        JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F01.mzXML
+        JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F02.mzXML
+```
+
+***NOTE:*** *It's not necessary for all the files to be in a directory structure like this, but it makes it easier to document and show the results for the purposes of this documentation.*    
+
+After you have the mass spec data (mzXML) and the sequence file (FASTA) that you want to use in place, you are ready to start MaxQuant and configure your analysis and run it.
 
 
+## 
