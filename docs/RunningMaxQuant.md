@@ -32,11 +32,11 @@ After you have the mass spec data (mzXML) and the sequence file (FASTA) that you
 
 ## Configuring and Running MaxQuant
 
-
+[[/docs/RunningMaxQuant/maxquant-open.png]]
 
 [[/docs/RunningMaxQuant/maxquant-load-mzxml.png]]
 
-
+[[/docs/RunningMaxQuant/maxquant-type.png]]
 
 [[/docs/RunningMaxQuant/maxquant-digestion.png]]
 
@@ -60,7 +60,6 @@ After you have the mass spec data (mzXML) and the sequence file (FASTA) that you
 [[/docs/RunningMaxQuant/maxquant-threads-start.png]]
 
 [[/docs/RunningMaxQuant/maxquant-running-status-files.png]]
-
 
 
 
