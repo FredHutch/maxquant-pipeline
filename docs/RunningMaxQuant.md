@@ -38,3 +38,36 @@ After you have the mass spec data (mzXML) and the sequence file (FASTA) that you
 
 [[/docs/RunningMaxQuant/maxquant-type.png]]
 
+[[/docs/RunningMaxQuant/maxquant-digestion.png]]
+
+[[/docs/RunningMaxQuant/maxquant-modifications.png]]
+
+
+[[/docs/RunningMaxQuant/maxquant-misc.png]]
+
+
+[[/docs/RunningMaxQuant/maxquant-seq-loaded.png]]
+
+
+[[/docs/RunningMaxQuant/maxquant-load-seq.png]]
+
+
+[[/docs/RunningMaxQuant/maxquant-protein-quant.png]]
+
+
+[[/docs/RunningMaxQuant/maxquant-running.png]]
+
+[[/docs/RunningMaxQuant/maxquant-threads-start.png]]
+
+[[/docs/RunningMaxQuant/maxquant-running-status-files.png]]
+
+
+
+
+
+
+
+
+
+
+
