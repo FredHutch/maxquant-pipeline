@@ -45,10 +45,15 @@ Next select the **"Group-specific parameters"** tab, then the **"Type"** sub-tab
 - **Multiplicity**: 2
 - **Light Labels**: nothing selected
 - **Heavy Labels**: Arg10 and Lys8
+
+MaxQuant should now look like the following:
  
 ![](/docs/RunningMaxQuant/maxquant-type.png)
 
+Next select the **"Group-specific parameters"** tab, then the **"Digestion"** sub-tab. Remove everything from the right selection and add the **Trypsin** enzyme. MaxQuant should look like the following:
+
 ![](/docs/RunningMaxQuant/maxquant-digestion.png)
+
 
 ![](/docs/RunningMaxQuant/maxquant-modifications.png)
 
