@@ -32,7 +32,7 @@ After you have the mass spec data (mzXML) and the sequence file (FASTA) that you
 
 ## Configuring and Running MaxQuant
 
-After starting MaxQuant, the first thing that you'll need to do is load the mzXML data that you prepared in the section above. In MaxQuant, click on the **"RAW files"** tab then on the **"Load"** sub-tab as shown below:
+After starting MaxQuant, the first thing that you'll need to do is load the mzXML data that you prepared in the section above. In MaxQuant, click on the **"RAW files"** tab then the **"Load"** sub-tab as shown below:
 
 ![](/docs/RunningMaxQuant/maxquant-open.png)
 
@@ -40,6 +40,12 @@ In the resulting file open dialog shown below, navigate to the location where th
 
 ![](/docs/RunningMaxQuant/maxquant-load-mzxml.png)
 
+Next select the **"Group-specific parameters"** tab, then the **"Type"** sub-tab. Make the following selections:
+
+- **Multiplicity**: 2
+- **Light Labels**: nothing selected
+- **Heavy Labels**: Arg10 and Lys8
+ 
 ![](/docs/RunningMaxQuant/maxquant-type.png)
 
 ![](/docs/RunningMaxQuant/maxquant-digestion.png)
