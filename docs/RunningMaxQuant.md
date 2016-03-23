@@ -2,7 +2,7 @@
 
 This document shows how to manually run a small analysis job using MaxQuant.
 
-### Preparing the data
+## Preparing the data
 
 Running a MaxQuant job requires mass spectrometry data in *.mzXML format. In this example we'll be conducting an analysis on two files:
 
@@ -30,4 +30,11 @@ C:\MQ-EXAMPLE
 After you have the mass spec data (mzXML) and the sequence file (FASTA) that you want to use in place, you are ready to start MaxQuant and configure your analysis and run it.
 
 
-## 
+## Configuring and Running MaxQuant
+
+[[/docs/RunningMaxQuant/maxquant-open.png]]
+
+[[/docs/RunningMaxQuant/maxquant-load-mzxml.png]]
+
+[[/docs/RunningMaxQuant/maxquant-type.png]]
+
