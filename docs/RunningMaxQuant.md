@@ -58,16 +58,21 @@ MaxQuant should now look like the following:
 
 ### Selecting the digestion enzymes
 
-Next select the **"Group-specific parameters"** tab, then the **"Digestion"** sub-tab. Remove everything from the right selection and add the **Trypsin** enzyme. MaxQuant should look like the following:
+Select the **"Group-specific parameters"** tab, then the **"Digestion"** sub-tab. Remove everything from the right selection box and add the **"Trypsin"** enzyme. MaxQuant should look like the following:
 
 ![](/docs/RunningMaxQuant/maxquant-digestion.png)
 
 
 ### Setting the modification variables
 
-
+Select the **"Group-specific parameters"** tab, then the **"Modifications"** sub-tab.  Remove everything from the right selection box and add the **"Oxidation (M)"** and **"Phospho (STY)"** modification variables. When complete MaxQuant should like like the following:
+  
 ![](/docs/RunningMaxQuant/maxquant-modifications.png)
 
+
+### Miscellaneous parameters
+
+Select the **"Group-specific parameters"** tab, then the **"Misc."** sub-tab. Check the **"Re-quantify"** checkbox and set **"Match type"** to **"Match from and to"**. MaxQuant should look like the following:
 
 ![](/docs/RunningMaxQuant/maxquant-misc.png)
 
