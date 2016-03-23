@@ -32,7 +32,11 @@ After you have the mass spec data (mzXML) and the sequence file (FASTA) that you
 
 ## Configuring and Running MaxQuant
 
+After starting MaxQuant, the first thing that you'll need to do is load the mzXML data that you prepared in the section above. In MaxQuant, click on the **"RAW files"** tab then on the **"Load"** sub-tab as shown below:
+
 ![](/docs/RunningMaxQuant/maxquant-open.png)
+
+In the resulting file open dialog shown below, navigate to the location where the mzXML files are located *(C:\MQ-EXAMPLE\MZXML in this example)*, change the file type selector to **"MzXml file (*.mzxml)"**, select the files and then click "Open" to load them.
 
 ![](/docs/RunningMaxQuant/maxquant-load-mzxml.png)
 
