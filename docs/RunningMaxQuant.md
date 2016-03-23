@@ -55,9 +55,11 @@ After you have the mass spec data (mzXML) and the sequence file (FASTA) that you
 ![](/docs/RunningMaxQuant/maxquant-protein-quant.png)
 
 
+![](/docs/RunningMaxQuant/maxquant-threads-start.png)
+
+
 ![](/docs/RunningMaxQuant/maxquant-running.png)
 
-![](/docs/RunningMaxQuant/maxquant-threads-start.png)
 
 ![](/docs/RunningMaxQuant/maxquant-running-status-files.png)
 
