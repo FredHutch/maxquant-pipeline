@@ -77,10 +77,19 @@ Select the **"Group-specific parameters"** tab, then the **"Misc."** sub-tab. Ch
 ![](/docs/RunningMaxQuant/maxquant-misc.png)
 
 
+### Loading reference Sequence and fixed modifications
+
+The reference sequence (FASTA) must be loaded and fixed modifications selected. Select the **"Global parameters"** tab, then the **"Sequences"** sub-tab. In the **"Fixed modifications"** section, remove everything from the right selection box and add the **"Carbamidomethyl (C)"**. Click the **"Add file"** button. In the resulting file open dialog, navigate to the location where the FASTA sequence file is located (C:\MQ-EXAMPLE\FASTA in this example), select the FASTA file and then click "Open" to load it.
+
 ![](/docs/RunningMaxQuant/maxquant-seq-loaded.png)
 
+In the resulting file open dialog shown below, navigate to the location where the FASTA sequence file is located *(C:\MQ-EXAMPLE\FASTA in this example)*, select the FASTA file and then click "Open" to load it.
 
 ![](/docs/RunningMaxQuant/maxquant-load-seq.png)
+
+
+### Protein quantification
+
 
 
 ![](/docs/RunningMaxQuant/maxquant-protein-quant.png)
