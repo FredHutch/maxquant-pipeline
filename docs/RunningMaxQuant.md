@@ -132,6 +132,9 @@ Here is the **"evidence.txt"** file when opened in Excel to see the results:
 The two mzXML files that were analyzed in this example totaled 2.7GB in size. But the size of the MZXML directory (and all subdirectories) is now 10.1GB, so there's a total of 7.4GB of intermediate and result data generated during the analysis.
 
 ### Job Timing 
+
+MaxQuant generates a bunch of status and timing files that are located in the **"C:\MQ-EXAMPLE\MZXML\combined\proc"** directory. To see how long the analysis took to run, or the timings of each phase, look at the **"RunningTimes.txt"** in this directory. In this example analysis with two mzXML files totaling 2.7GB, the complete analysis took 35 hours to complete. 
+
 ![](/docs/RunningMaxQuant/Maxquant-status-n-timing-files.png)
 
 
