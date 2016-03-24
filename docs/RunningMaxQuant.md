@@ -111,15 +111,27 @@ To view the status of the analysis while it's running, select the **"Performance
 ![](/docs/RunningMaxQuant/maxquant-running.png)
 
 
+### Results 
+
+When the analysis is complete, MaxQuant will let you know with a very simple **"Done"** dialog as shown below: 
+
 ![](/docs/RunningMaxQuant/Maxquant-done-with-dialog.png)
 
+To view the results in MaxQuant, simply click on the **"Viewer"** tab which will display some high-level results like the following:
 
 ![](/docs/RunningMaxQuant/Maxquant-view-results.png)
 
+The raw results files will be located under the **"C:\MQ-EXAMPLE\MZXML\"** directory. For example here is all the files written to the **"C:\MQ-EXAMPLE\MZXML\combined\txt"**: 
+
 ![](/docs/RunningMaxQuant/Maxquant-result-files.png)
+
+Here is the **"evidence.txt"** file when opened in Excel to see the results:
 
 ![](/docs/RunningMaxQuant/results-excel.png)
 
+The two mzXML files that were analyzed in this example totaled 2.7GB in size. But the size of the MZXML directory (and all subdirectories) is now 10.1GB, so there's a total of 7.4GB of intermediate and result data generated during the analysis.
+
+### Job Timing 
 ![](/docs/RunningMaxQuant/Maxquant-status-n-timing-files.png)
 
 
