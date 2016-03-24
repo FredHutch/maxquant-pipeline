@@ -111,6 +111,9 @@ To view the status of the analysis while it's running, select the **"Performance
 ![](/docs/RunningMaxQuant/maxquant-running.png)
 
 
+![](/docs/RunningMaxQuant/Maxquant-done-with-dialog.png)
+
+
 
 
 
