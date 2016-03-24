@@ -106,6 +106,8 @@ Once you have determined the correct number of threads, enter the number into th
 
 ### Monitoring Progress
 
+To view the status of the analysis while it's running, select the **"Performance"** tab. This will show you the tasks/stages that are in progress. If you want to see the status of of everything including tasks/stages that have completed, click on the **"Show all activities"**. The image below shows MaxQuant with running tasks: 
+
 ![](/docs/RunningMaxQuant/maxquant-running.png)
 
 
