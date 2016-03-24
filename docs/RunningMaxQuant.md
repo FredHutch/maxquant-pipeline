@@ -97,7 +97,14 @@ Select the **"Global parameters"** tab, then the **"Protein quantification"** su
 
 ### Thread selection and Starting MaxQuant
 
+You are almost ready to start the the analysis. Select the number of threads equal to the number of mzXML files you are analyzing up to the number of logical CPU cores in the system where where MaxQuant is running. For example if you are are analyzing 4 files on a system with 8 logical CPU cores, you would select 4 threads. If you are analyzing 64 mzXML files on a system with 32 logical CPU cores, you would select 32 thread. There is one more consideration; memory. Each thread requires 2GB of RAM, So in the last example (64 files, 32 logical CPU cores) if the server only had 16GB of *available* RAM then you would select select 8 threads even though you have 32 logical CPU cores. If you don't take memory constraints into consideration the system will either run out of RAM or start swapping (bringing the analysis to a crawl).
+
+Once you have determined the correct number of threads, enter the number into the **"Number of threads"** field and then click the **"Start"** button.     
+ 
 ![](/docs/RunningMaxQuant/maxquant-threads-start.png)
+
+
+### Monitoring Progress
 
 ![](/docs/RunningMaxQuant/maxquant-running.png)
 
