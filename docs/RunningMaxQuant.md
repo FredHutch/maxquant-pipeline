@@ -88,12 +88,7 @@ Select the **"Group-specific parameters"** tab, then the **"Misc."** sub-tab. Ch
 
 ![](/docs/RunningMaxQuant/maxquant-threads-start.png)
 
-
 ![](/docs/RunningMaxQuant/maxquant-running.png)
-
-
-![](/docs/RunningMaxQuant/maxquant-running-status-files.png)
-
 
 
 
