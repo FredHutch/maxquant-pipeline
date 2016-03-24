@@ -45,7 +45,7 @@ In the resulting file open dialog shown below, navigate to the location where th
 
 ### Selecting the analysis type 
 
-Next select the **"Group-specific parameters"** tab, then the **"Type"** sub-tab. Make the following selections:
+Select the **"Group-specific parameters"** tab, then the **"Type"** sub-tab. Make the following selections:
 
 - **Multiplicity**: 2
 - **Light Labels**: nothing selected
@@ -90,15 +90,16 @@ In the resulting file open dialog shown below, navigate to the location where th
 
 ### Protein quantification
 
-
+Select the **"Global parameters"** tab, then the **"Protein quantification"** sub-tab. Remove everything from the right selection box and add the **"Oxidation (M)"** and **"Phospho (STY)"** modifications. When complete MaxQuant should like like the following:
 
 ![](/docs/RunningMaxQuant/maxquant-protein-quant.png)
 
 
+### Thread selection and Starting MaxQuant
+
 ![](/docs/RunningMaxQuant/maxquant-threads-start.png)
 
 ![](/docs/RunningMaxQuant/maxquant-running.png)
-
 
 
 
