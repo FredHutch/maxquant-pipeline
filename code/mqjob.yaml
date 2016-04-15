@@ -1,0 +1,33 @@
+jobName:
+    rmcdermo_job1
+
+threads:
+    2
+
+mzxmlFiles:
+    c:/job/mzxml/file1.mzxml,
+    c:/job/mzxml/file2.mzxml
+
+heavyLabels:
+    Arg10,
+    Lys8
+
+multiplicity:
+    2
+
+enzymes:
+    Trypsin
+
+variableModifications:
+    Oxidation (M),
+    Phospho (STY)
+
+fixedModifications:
+    Carbamidomethyl (C)
+
+fastaFiles:
+    c:/job/fasta/test.fasta
+
+restrictionModifications:
+    Oxidation (M),
+    Phospho (STY)
