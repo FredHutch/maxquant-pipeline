@@ -62,7 +62,8 @@ def create_ec2worker():
                         'DeleteOnTermination': False,
                         'VolumeType': 'gp2'
                         }
-            }]
+            }],
+        IamInstanceProfile={'Arn': 'arn:aws:iam::458818213009:instance-profile/maxquant'}
         )
 
     instanceId = res[0].id
