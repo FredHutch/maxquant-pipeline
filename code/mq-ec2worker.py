@@ -7,17 +7,16 @@ import base64
 import time
 
 region = 'us-west-2'
-ami = 'ami-1719f677'
 securityGroups = ['sg-a2dd8dc6']
-instanceType = "t2.small"
+instanceType = "m4.large"
 subnetId = 'subnet-a95a0ede'
-volumeSize = 75
+volumeSize = 100
 
 UserData = """<powershell>
 # Set the local Administrator password
 $ComputerName = $env:COMPUTERNAME
 $user = [adsi]"WinNT://$ComputerName/Administrator,user"
-$user.setpassword("********")
+$user.setpassword("small-150")
 # Disable the Windows Firewall
 Get-NetFirewallProfile | Set-NetFirewallProfile Enabled False -Confirm:$false
 # Set the logon banner notice
@@ -30,10 +29,24 @@ Set-ItemProperty -Path $reg -Name legalnoticecaption -Type STRING -Value "FHCRC 
 Set-ItemProperty -Path $reg -Name legalnoticetext -Type STRING -Value $LegalNotice -Force
 # Rename the computer to match the provided instance name are reboot
 Rename-Computer -NewName maxquant-aws -Force
+Import-Module AwsPowerShell
+Test-S3Bucket -BucketName 'fredhutch-maxquant'
+Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/running.txt' -Content "job 43 running"
+Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MaxQuant_1.5.3.30.zip' -File 'C:\MaxQuant_1.5.3.30.zip'
+$BackUpPath = 'C:\MaxQuant_1.5.3.30.zip'
+$Destination = 'C:\'
+Add-Type -assembly "system.io.compression.filesystem"
+[io.compression.zipfile]::ExtractToDirectory($BackUpPath, $Destination)
+Read-S3Object -BucketName 'fredhutch-maxquant' -KeyPrefix 'DATA.dist' -Folder 'c:\mq-job43'
+C:\MaxQuant\bin\MaxQuantCmd.exe C:\mq-job43\mq-43.xml
+Write-S3Object -BucketName 'fredhutch-maxquant-jobs' -KeyPrefix 'combined' -Folder 'C:\mq-job43\combined' -Recurse
+Remove-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/running.txt' -Force
+Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/done.txt' -Content "job 43 complete"
+Stop-Computer -Force -Confirm:$false
 </powershell>
 """
 
-def create_ec2worker():
+def create_ec2worker(region, image_id):
     """
     Creates, tags, and starts a MaxQuant worker instance
     """
@@ -45,7 +58,7 @@ def create_ec2worker():
     # Create an EC2 instance
     print("Creating EC2 instance")
     res = ec2.create_instances(
-        ImageId = ami,
+        ImageId = image_id,
         SubnetId = subnetId,
         MinCount = 1,
         MaxCount = 1,
@@ -82,9 +95,32 @@ def create_ec2worker():
             {'Key': 'sle', 'Value': 'hours=variable / grant=no / phi=no / pii=no / public=no'}
             ])
 
+def find_image(region):
+    """
+    Finds the latest Windows 2012R2 offical Amazon AMI and returns the ID
+    """
+    ec2 = boto3.resource('ec2', region_name = "{0}".format(region))
+    images = ec2.images.filter(
+        Owners=['amazon'],
+        Filters=[
+            {'Name': 'name','Values': ['Windows_Server-2012-R2_RTM-English-64Bit-Base-*']},
+            {'Name': 'state', 'Values': ['available']},
+            {'Name': 'architecture', 'Values': ['x86_64']},
+            {'Name': 'root-device-type', 'Values': ['ebs']},
+            {'Name': 'virtualization-type', 'Values': ['hvm']},
+            {'Name': 'platform', 'Values': ['windows']},
+            ]
+    )
+    candidates = {}
+    for image in images:
+        candidates[image.creation_date] = image.image_id
+    cDate = sorted(candidates.keys(), reverse=True)[0]
+    ami = candidates[cDate]
+    return(ami)
 
 def main():
-    create_ec2worker()
+    image_id = find_image(region)
+    create_ec2worker(region, image_id)
 
 if __name__ == "__main__":
     main()
