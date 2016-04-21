@@ -5,8 +5,8 @@ threads:
     2
 
 mzxmlFiles:
-    c:/job/mzxml/file1.mzxml,
-    c:/job/mzxml/file2.mzxml
+    C:\mq-job43\JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F01.mzXML,
+    C:\mq-job43\JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F02.mzXML
 
 heavyLabels:
     Arg10,

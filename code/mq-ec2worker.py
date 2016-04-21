@@ -16,7 +16,7 @@ UserData = """<powershell>
 # Set the local Administrator password
 $ComputerName = $env:COMPUTERNAME
 $user = [adsi]"WinNT://$ComputerName/Administrator,user"
-$user.setpassword("small-150")
+$user.setpassword("password goes here")
 # Disable the Windows Firewall
 Get-NetFirewallProfile | Set-NetFirewallProfile Enabled False -Confirm:$false
 # Set the logon banner notice
@@ -32,13 +32,13 @@ Rename-Computer -NewName maxquant-aws -Force
 Import-Module AwsPowerShell
 Test-S3Bucket -BucketName 'fredhutch-maxquant'
 Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/running.txt' -Content "job 43 running"
-Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MaxQuant_1.5.3.30.zip' -File 'C:\MaxQuant_1.5.3.30.zip'
-$BackUpPath = 'C:\MaxQuant_1.5.3.30.zip'
-$Destination = 'C:\'
+Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MaxQuant_1.5.3.30.zip' -File 'C:/MaxQuant_1.5.3.30.zip'
+$BackUpPath = 'C:/MaxQuant_1.5.3.30.zip'
+$Destination = 'C:/'
 Add-Type -assembly "system.io.compression.filesystem"
 [io.compression.zipfile]::ExtractToDirectory($BackUpPath, $Destination)
 Read-S3Object -BucketName 'fredhutch-maxquant' -KeyPrefix 'DATA.dist' -Folder 'c:\mq-job43'
-C:\MaxQuant\bin\MaxQuantCmd.exe C:\mq-job43\mq-43.xml
+C:/MaxQuant/bin/MaxQuantCmd.exe C:/mq-job43/mq-43.xml
 Write-S3Object -BucketName 'fredhutch-maxquant-jobs' -KeyPrefix 'combined' -Folder 'C:\mq-job43\combined' -Recurse
 Remove-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/running.txt' -Force
 Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/done.txt' -Content "job 43 complete"
