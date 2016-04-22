@@ -12,9 +12,9 @@ def parseConfig(config):
     Parses a YAML formated MaxQuant job configuration file, formats the text of
     the variables and returns the configuration parameters in a dictionary
     """
-    #try:
-    with open(config, 'r') as f:
-        mqparams = yaml.load(f)
+    try:
+        with open(config, 'r') as f:
+            mqparams = yaml.load(f)
 
         # Parse and format the list of imput mzXML files. As returns the formated 'experiments', 'fractions' and 'paramGroupIndices' parameters
         mzxmlFiles = [e.strip() for e in mqparams['mzxmlFiles'].split(',')]
@@ -54,9 +54,9 @@ def parseConfig(config):
         mqparams['contactEmail'] = mqparams['contactEmail'].strip()
 
         # return a dictionary of formated MQ parameters.
-    return mqparams
-    #except:
-    #    raise Exception("Error opening or parsing configuration file: {0}".format(config) )
+        return mqparams
+    except:
+        raise Exception("Error opening or parsing configuration file: {0}".format(config) )
 
 def createMqConfig(mqparams, template):
     """
