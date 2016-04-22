@@ -5,7 +5,7 @@ mqconfig.py: Converts YAML MaxQaunt job configuration to an XML configuration fo
 import sys
 import yaml
 import boto3
-
+import mqEC2worker
 
 def parseConfig(config):
     """
@@ -19,7 +19,7 @@ def parseConfig(config):
         # Parse and format the list of imput mzXML files. As returns the formated 'experiments', 'fractions' and 'paramGroupIndices' parameters
         mzxmlFiles = [e.strip() for e in mqparams['mzxmlFiles'].split(',')]
         mqparams['mzxmlFilesRaw'] = [e.strip() for e in mqparams['mzxmlFiles'].split(',')]
-        mqparams['mzxmlFiles'] = "\n".join(map(lambda x: " " * 8 + "<string>{0}</string>".format(x), mzxmlFiles))
+        mqparams['mzxmlFiles'] = "\n".join(map(lambda x: " " * 8 + "<string>C:/mq-job/{0}</string>".format(x), mzxmlFiles))
         mqparams['experiments'] = "\n".join(map(lambda x: " " * 8 + "<string/>", mzxmlFiles))
         mqparams['fractions'] = "\n".join(map(lambda x: " " * 8 + "<short>32767</short>", mzxmlFiles))
         mqparams['paramGroupIndices'] = "\n".join(map(lambda x: " " * 8 + "<int>0</int>", mzxmlFiles))
@@ -27,7 +27,7 @@ def parseConfig(config):
         # Parse and format the list of fasta files.
         fastaFiles = [e.strip() for e in mqparams['fastaFiles'].split(',')]
         mqparams['fastaFilesRaw'] = [e.strip() for e in mqparams['fastaFiles'].split(',')]
-        mqparams['fastaFiles'] = "\n".join(map(lambda x: " " * 8 + "<string>{0}</string>".format(x), fastaFiles))
+        mqparams['fastaFiles'] = "\n".join(map(lambda x: " " * 8 + "<string>C:/mq-job/{0}</string>".format(x), fastaFiles))
 
         # Parse and format the heavy labels.
         heavyLabels = ";".join([e.strip() for e in mqparams['heavyLabels'].split(',')])
@@ -49,6 +49,9 @@ def parseConfig(config):
         restrictionModifications = [e.strip() for e in mqparams['restrictionModifications'].split(',')]
         mqparams['restrictionModifications'] = "\n".join(map(lambda x: " " * 8 + "<string>{0}</string>".format(x), restrictionModifications))
 
+        mqparams['multiplicity'] = str(mqparams['multiplicity']).strip()
+        mqparams['threads'] = pickInstanceType(mqparams['mzxmlFilesRaw'])[1]
+        mqparams['instanceType'] = pickInstanceType(mqparams['mzxmlFilesRaw'])[0]
         mqparams['jobName'] = mqparams['jobName'].strip()
         mqparams['department'] = mqparams['department'].strip()
         mqparams['contactEmail'] = mqparams['contactEmail'].strip()
@@ -57,6 +60,29 @@ def parseConfig(config):
         return mqparams
     except:
         raise Exception("Error opening or parsing configuration file: {0}".format(config) )
+
+def pickInstanceType(mzxmlFilesRaw):
+    fileCount = len(mzxmlFilesRaw)
+    if fileCount <= 2:
+        instanceType = "c4.large"
+        threads = str(fileCount)
+    elif fileCount <= 4:
+        instanceType = "c4.xlarge"
+        threads = str(fileCount)
+    elif fileCount <= 8:
+        instanceType = "c4.2xlarge"
+        threads = str(fileCount)
+    elif fileCount <= 16:
+        instanceType = "c4.4xlarge"
+        threads = str(fileCount)
+    elif fileCount >= 17:
+        instanceType = "c4.8xlarge"
+        if fileCount <= 36:
+            threads = str(fileCount)
+        else:
+            threads = "36"
+    return instanceType, threads
+
 
 def createMqConfig(mqparams, template):
     """
@@ -88,6 +114,14 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     client.put_object(Body="ready", Bucket='fredhutch-maxquant-jobs', Key="{0}/jobCtrl/ready.txt".format(jobFolder))
     print(" Done!\n")
 
+def startWorker(mqparams):
+    region = 'us-west-2'
+    securityGroups = ['sg-a2dd8dc6']
+    instanceType = mqparams['instanceType']
+    subnetId = 'subnet-a95a0ede'
+    volumeSize = 100
+    image_id = mqEC2worker.find_image(region)
+    mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, mqEC2worker.UserData, mqparams)
 
 def main(configIn, template):
     """
@@ -107,6 +141,7 @@ def main(configIn, template):
     jobFolder = "{0}_{1}".format(mqparams['department'], mqparams['jobName'])
     uploadS3(mqBucket, jobFolder, mqparams, configOut)
     print("Your MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
+    startWorker(mqparams)
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

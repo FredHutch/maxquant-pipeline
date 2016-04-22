@@ -7,9 +7,6 @@ department:
 contactEmail:
     rmcdermo@fredhutch.org
 
-threads:
-    2
-
 mzxmlFiles:
     JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F01.mzXML,
     JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F02.mzXML

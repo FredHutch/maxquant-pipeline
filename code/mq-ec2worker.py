@@ -3,7 +3,6 @@
 mq-ec2worker.py: create, bootstrap a MaxQuant EC2 instance and start a job
 """
 import boto3
-import base64
 import time
 
 region = 'us-west-2'
@@ -37,16 +36,16 @@ $BackUpPath = 'C:/MaxQuant_1.5.3.30.zip'
 $Destination = 'C:/'
 Add-Type -assembly "system.io.compression.filesystem"
 [io.compression.zipfile]::ExtractToDirectory($BackUpPath, $Destination)
-Read-S3Object -BucketName 'fredhutch-maxquant' -KeyPrefix 'DATA.dist' -Folder 'c:\mq-job43'
-C:/MaxQuant/bin/MaxQuantCmd.exe C:/mq-job43/mq-43.xml
-Write-S3Object -BucketName 'fredhutch-maxquant-jobs' -KeyPrefix 'combined' -Folder 'C:\mq-job43\combined' -Recurse
+Read-S3Object -BucketName 'fredhutch-maxquant' -KeyPrefix 'DATA.dist' -Folder 'c:\mq-job'
+C:/MaxQuant/bin/MaxQuantCmd.exe C:/mq-job/mq-job.xml
+Write-S3Object -BucketName 'fredhutch-maxquant-jobs' -KeyPrefix 'combined' -Folder 'C:/mq-job/combined' -Recurse
 Remove-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/running.txt' -Force
-Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/done.txt' -Content "job 43 complete"
+Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/done.txt' -Content "done"
 Stop-Computer -Force -Confirm:$false
 </powershell>
 """
 
-def create_ec2worker(region, image_id):
+def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData):
     """
     Creates, tags, and starts a MaxQuant worker instance
     """
@@ -120,7 +119,7 @@ def find_image(region):
 
 def main():
     image_id = find_image(region)
-    create_ec2worker(region, image_id)
+    create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData)
 
 if __name__ == "__main__":
     main()
