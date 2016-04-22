@@ -83,8 +83,8 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     sys.stdout.write("\nUploading configuration file...")
     transfer.upload_file(configOut, mqBucket, "{0}/{1}".format(jobFolder, configOut))
     print(" Done!")
-    sys.stdout.write("\nSetting Job Ready Flag"...")
-    client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']) Bucket='fredhutch-maxquant-jobs', Key="{0}/jobinfo.txt".format(jobFolder))
+    sys.stdout.write("\nSetting Job Ready Flag...")
+    client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']), Bucket='fredhutch-maxquant-jobs', Key="{0}/jobinfo.txt".format(jobFolder))
     client.put_object(Body="ready", Bucket='fredhutch-maxquant-jobs', Key="{0}/jobCtrl/ready.txt".format(jobFolder))
     print(" Done!\n")
 
