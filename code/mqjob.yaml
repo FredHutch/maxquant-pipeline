@@ -1,12 +1,15 @@
 jobName:
-    rmcdermo_job1
+    human-brain
 
-threads:
-    2
+department:
+    scicomp
+
+contactEmail:
+    rmcdermo@fredhutch.org
 
 mzxmlFiles:
-    C:\mq-job43\JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F01.mzXML,
-    C:\mq-job43\JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F02.mzXML
+    JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F01.mzXML,
+    JK042415_042415_RadOnc_01_10Gy_SS_BRP_IMAC_F02.mzXML
 
 heavyLabels:
     Arg10,
@@ -26,7 +29,7 @@ fixedModifications:
     Carbamidomethyl (C)
 
 fastaFiles:
-    c:/job/fasta/test.fasta
+    uniprot_taxonomy_9606_Reviewed.fasta
 
 restrictionModifications:
     Oxidation (M),
