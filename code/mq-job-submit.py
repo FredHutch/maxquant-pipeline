@@ -3,6 +3,7 @@
 mqconfig.py: Converts YAML MaxQaunt job configuration to an XML configuration format suitable for running a job
 """
 import sys
+import random
 import yaml
 import boto3
 import mqEC2worker
@@ -83,6 +84,12 @@ def pickInstanceType(mzxmlFilesRaw):
             threads = "36"
     return instanceType, threads
 
+def passwordGen(plength):
+    chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!'
+    p = []
+    for char in range(plength):
+        p.append(random.choice(chars))
+    return(''.join(p))
 
 def createMqConfig(mqparams, template):
     """
@@ -112,16 +119,18 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     sys.stdout.write("\nSetting Job Ready Flag...")
     client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']), Bucket='fredhutch-maxquant-jobs', Key="{0}/jobinfo.txt".format(jobFolder))
     client.put_object(Body="ready", Bucket='fredhutch-maxquant-jobs', Key="{0}/jobCtrl/ready.txt".format(jobFolder))
-    print(" Done!\n")
+    print(" Done!")
 
-def startWorker(mqparams):
+def startWorker(mqBucket, mqparams):
     region = 'us-west-2'
     securityGroups = ['sg-a2dd8dc6']
     instanceType = mqparams['instanceType']
     subnetId = 'subnet-a95a0ede'
     volumeSize = 100
+    password = passwordGen(15)
+    UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = mqEC2worker.find_image(region)
-    mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, mqEC2worker.UserData, mqparams)
+    mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
 
 def main(configIn, template):
     """
@@ -138,10 +147,10 @@ def main(configIn, template):
         out.write(mqconfig)
     print(" Done!")
     mqBucket = "fredhutch-maxquant-jobs"
-    jobFolder = "{0}_{1}".format(mqparams['department'], mqparams['jobName'])
+    jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
     uploadS3(mqBucket, jobFolder, mqparams, configOut)
-    print("Your MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
-    startWorker(mqparams)
+    startWorker(mqBucket, mqparams)
+    print("\nYour MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:

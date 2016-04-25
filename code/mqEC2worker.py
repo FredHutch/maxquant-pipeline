@@ -3,6 +3,7 @@
 mq-ec2worker.py: create, bootstrap a MaxQuant EC2 instance and start a job
 """
 import boto3
+import sys
 import time
 
 region = 'us-west-2'
@@ -12,10 +13,13 @@ subnetId = 'subnet-a95a0ede'
 volumeSize = 100
 
 UserData = """<powershell>
+$bucket = '{bucket}'
+$jobFolder = '{jobFolder}'
+$jobContact = '{jobContact}'
 # Set the local Administrator password
 $ComputerName = $env:COMPUTERNAME
 $user = [adsi]"WinNT://$ComputerName/Administrator,user"
-$user.setpassword("password goes here")
+$user.setpassword("{password}")
 # Disable the Windows Firewall
 Get-NetFirewallProfile | Set-NetFirewallProfile Enabled False -Confirm:$false
 # Set the logon banner notice
@@ -26,22 +30,49 @@ Set-ItemProperty -Path $reg -Name dontdisplaylastusername -Value 00000001 -Type 
 Set-ItemProperty -Path $reg -Name shutdownwithoutlogon -Value 00000000 -Type DWORD -Force
 Set-ItemProperty -Path $reg -Name legalnoticecaption -Type STRING -Value "FHCRC Network Access Warning"  -Force
 Set-ItemProperty -Path $reg -Name legalnoticetext -Type STRING -Value $LegalNotice -Force
-# Rename the computer to match the provided instance name are reboot
-Rename-Computer -NewName maxquant-aws -Force
+Rename the computer to match the provided instance name are reboot
+Rename-Computer -NewName "maxquant-$jobFolder" -Force
 Import-Module AwsPowerShell
-Test-S3Bucket -BucketName 'fredhutch-maxquant'
-Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/running.txt' -Content "job 43 running"
+Write-Host "Testing to see if bucket $bucket is present"
+if (Test-S3Bucket -BucketName $bucket){{
+Write-Host "Removing ready flag: $jobFolder/jobCtrl/ready.txt"
+Remove-S3Object -BucketName $bucket -Key "$jobFolder/jobCtrl/ready.txt" -Force
+Write-Host "Adding running flag: $jobFolder/jobCtrl/running.txt"
+Write-S3Object -BucketName $bucket -Key "$jobFolder/jobCtrl/running.txt" -Content "running"
+Write-Host "Downloading MaxQuant application"
 Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MaxQuant_1.5.3.30.zip' -File 'C:/MaxQuant_1.5.3.30.zip'
 $BackUpPath = 'C:/MaxQuant_1.5.3.30.zip'
 $Destination = 'C:/'
+Write-Host "Unzipping MaxQuant application"
 Add-Type -assembly "system.io.compression.filesystem"
 [io.compression.zipfile]::ExtractToDirectory($BackUpPath, $Destination)
-Read-S3Object -BucketName 'fredhutch-maxquant' -KeyPrefix 'DATA.dist' -Folder 'c:\mq-job'
+Write-Host "Dowloading job data and configuration from S3: $bucket/$jobFolder"
+Read-S3Object -BucketName $bucket -KeyPrefix "$jobFolder" -Folder 'C:/mq-job'
+Write-Host "Starting MaxQuant Job"
 C:/MaxQuant/bin/MaxQuantCmd.exe C:/mq-job/mq-job.xml
-Write-S3Object -BucketName 'fredhutch-maxquant-jobs' -KeyPrefix 'combined' -Folder 'C:/mq-job/combined' -Recurse
-Remove-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/running.txt' -Force
-Write-S3Object -BucketName 'fredhutch-maxquant' -Key 'jobctrl/done.txt' -Content "done"
+Write-Host "Job complete, uploading job results to S3"
+Write-S3Object -BucketName $bucket -KeyPrefix "$jobFolder/combined" -Folder 'C:/mq-job/combined' -Recurse
+Write-Host "Removing running flag: $jobFolder/jobCtrl/running.txt"
+Remove-S3Object -BucketName $bucket -Key "$jobFolder/jobCtrl/running.txt" -Force
+Write-Host "Adding done flag: $jobFolder/jobCtrl/done.txt"
+Write-S3Object -BucketName $bucket -Key "$jobFolder/jobCtrl/done.txt" -Content "done"
+$resultsBundleFile = "maxquant-${{jobFolder}}-results-combined.zip"
+Write-Host "Creating job result bundle: $resultsBundleFile"
+$resultsBundlePath = "$env:TEMP/$resultsBundleFile"
+Add-Type -assembly "system.io.compression.filesystem"
+[io.compression.zipfile]::CreateFromDirectory("C:/mq-job/combined", $resultsBundlePath)
+Write-Host "Uploading results bundle to S3: $jobFolder/$resultsBundleFile"
+Write-S3Object -BucketName $bucket -Key "$jobFolder/$resultsBundleFile" -File $resultsBundlePath
+Write-Host "Sending $jobContact a link to download the results from S3"
+$ExpirationDate = (Get-Date).AddDays(30)
+$resultsURL = Get-S3PreSignedURL -Verb GET -Expires $ExpirationDate -Bucket $bucket -Key "$jobFolder/$resultsBundleFile"
+Send-MailMessage -SmtpServer "mx.fhcrc.org" -From "maxquant-do-not-reply@fredhutch.org" -Body "Your MaxQuant job results are available for download:`n`n$resultsURL`n`nThis link will expire on $ExpirationDate" -Subject "Maxquant Job Results for job: $jobFolder (30 day download link)" -To $jobContact
+Write-Host "All Done! Shutting down server..."
 Stop-Computer -Force -Confirm:$false
+}}
+else {{
+Write-Host -ForegroundColor Red "bucket not found"
+}}
 </powershell>
 """
 
@@ -49,13 +80,12 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
     """
     Creates, tags, and starts a MaxQuant worker instance
     """
-
     # Connect to AWS
-    print("Connecting to AWS EC2 Region {0}".format(region))
+    sys.stdout.write("\nConnecting to AWS EC2 Region {0}...".format(region))
     ec2 = boto3.resource('ec2', region_name = "{0}".format(region))
-
+    print(" Done!")
     # Create an EC2 instance
-    print("Creating EC2 instance")
+    sys.stdout.write("\nCreating EC2 instance...")
     res = ec2.create_instances(
         ImageId = image_id,
         SubnetId = subnetId,
@@ -79,12 +109,12 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
         )
 
     instanceId = res[0].id
-    print("Instance created: {0}".format(instanceId))
+    print(" Instance {0} created".format(instanceId))
 
 
     # Tag the EC2 instance
     time.sleep(10)
-    print("Tagging EC2 instance")
+    sys.stdout.write("\nTagging EC2 instance...")
     ec2.create_tags(Resources=["{0}".format(instanceId)],
         Tags=[{'Key': 'Name', 'Value': "maxquant-{0}-{1}".format(mqparams['department'], mqparams['jobName'])},
             {'Key': 'technical_contact', 'Value': mqparams['contactEmail']},
@@ -93,11 +123,13 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
             {'Key': 'owner', 'Value': mqparams['department']},
             {'Key': 'sle', 'Value': 'hours=variable / grant=no / phi=no / pii=no / public=no'}
             ])
+    print(" Done!")
 
 def find_image(region):
     """
     Finds the latest Windows 2012R2 offical Amazon AMI and returns the ID
     """
+    sys.stdout.write("\nFinding latest Windows 2012R2 image...")
     ec2 = boto3.resource('ec2', region_name = "{0}".format(region))
     images = ec2.images.filter(
         Owners=['amazon'],
@@ -115,6 +147,7 @@ def find_image(region):
         candidates[image.creation_date] = image.image_id
     cDate = sorted(candidates.keys(), reverse=True)[0]
     ami = candidates[cDate]
+    print(" Selected {0}".format(ami))
     return(ami)
 
 def main():
