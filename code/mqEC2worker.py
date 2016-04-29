@@ -64,8 +64,9 @@ Add-Type -assembly "system.io.compression.filesystem"
 Write-Host "Uploading results bundle to S3: $jobFolder/$resultsBundleFile"
 Write-S3Object -BucketName $bucket -Key "$jobFolder/$resultsBundleFile" -File $resultsBundlePath
 Write-Host "Sending $jobContact a link to download the results from S3"
-$ExpirationDate = (Get-Date).AddDays(30)
-$resultsURL = Get-S3PreSignedURL -Verb GET -Expires $ExpirationDate -Bucket $bucket -Key "$jobFolder/$resultsBundleFile"
+$resultsURL = Get-Content -path "C:/mq-job/resultsUrl.txt"
+#$ExpirationDate = (Get-Date).AddDays(30)
+#$resultsURL = Get-S3PreSignedURL -Verb GET -Expires $ExpirationDate -Bucket $bucket -Key "$jobFolder/$resultsBundleFile"
 Send-MailMessage -SmtpServer "mx.fhcrc.org" -From "maxquant-do-not-reply@fredhutch.org" -Body "Your MaxQuant job results are available for download:`n`n$resultsURL`n`nThis link will expire on $ExpirationDate" -Subject "Maxquant Job Results for job: $jobFolder (30 day download link)" -To $jobContact
 Write-Host "All Done! Shutting down server..."
 Stop-Computer -Force -Confirm:$false
