@@ -117,10 +117,10 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     transfer.upload_file(configOut, mqBucket, "{0}/{1}".format(jobFolder, configOut))
     print(" Done!")
     sys.stdout.write("\nSetting Job Ready Flag...")
-    client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']), Bucket = mqBucket, Key="{0}/jobinfo.txt".format(jobFolder))
+    client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']), Bucket = mqBucket, Key="{0}/jobCtrl/jobinfo.txt".format(jobFolder))
     client.put_object(Body="ready", Bucket = mqBucket, Key="{0}/jobCtrl/ready.txt".format(jobFolder))
     resultsUrl = genTempUrl(mqBucket, jobFolder).strip()
-    client.put_object(Body = resultsUrl, Bucket = mqBucket, Key="{0}/resultsUrl.txt".format(jobFolder))
+    client.put_object(Body = resultsUrl, Bucket = mqBucket, Key="{0}/jobCtrl/resultsUrl.txt".format(jobFolder))
     print(" Done!")
 
 def startWorker(mqBucket, mqparams):
@@ -138,7 +138,7 @@ def genTempUrl(mqBucket, jobFolder):
     client = boto3.client('s3')
     expiresIn = 2937600 # 34 days
     resultsBundleFile = "maxquant-{0}-results-combined.zip".format(jobFolder)
-    url = client.generate_presigned_url('get_object', Params = {'Bucket': mqBucket, 'Key': resultsBundleFile}, ExpiresIn = expiresIn)
+    url = client.generate_presigned_url('get_object', Params = {'Bucket': mqBucket, 'Key': "{0}/{1}".format(jobFolder, resultsBundleFile), ExpiresIn = expiresIn)
     return url
 
 def main(configIn, template):
