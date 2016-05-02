@@ -30,7 +30,7 @@ Set-ItemProperty -Path $reg -Name dontdisplaylastusername -Value 00000001 -Type 
 Set-ItemProperty -Path $reg -Name shutdownwithoutlogon -Value 00000000 -Type DWORD -Force
 Set-ItemProperty -Path $reg -Name legalnoticecaption -Type STRING -Value "FHCRC Network Access Warning"  -Force
 Set-ItemProperty -Path $reg -Name legalnoticetext -Type STRING -Value $LegalNotice -Force
-Rename the computer to match the provided instance name are reboot
+#Rename the computer to match the provided instance name are reboot
 Rename-Computer -NewName "maxquant-$jobFolder" -Force
 Import-Module AwsPowerShell
 Write-Host "Testing to see if bucket $bucket is present"
