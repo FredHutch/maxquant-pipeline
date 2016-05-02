@@ -138,7 +138,7 @@ def genTempUrl(mqBucket, jobFolder):
     client = boto3.client('s3')
     expiresIn = 2937600 # 34 days
     resultsBundleFile = "maxquant-{0}-results-combined.zip".format(jobFolder)
-    url = client.generate_presigned_url('get_object', Params = {'Bucket': mqBucket, 'Key': "{0}/{1}".format(jobFolder, resultsBundleFile), ExpiresIn = expiresIn)
+    url = client.generate_presigned_url('get_object', Params = {'Bucket': mqBucket, 'Key': "{0}/{1}".format(jobFolder, resultsBundleFile)}, ExpiresIn = expiresIn)
     return url
 
 def main(configIn, template):

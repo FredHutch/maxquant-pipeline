@@ -50,7 +50,7 @@ $Destination = 'C:/'
 Write-Host "Unzipping MaxQuant application"
 Add-Type -assembly "system.io.compression.filesystem"
 [io.compression.zipfile]::ExtractToDirectory($BackUpPath, $Destination)
-Write-Host "Dowloading job data and configuration from S3: $bucket/$jobFolder"
+Write-Host "Downloading job data and configuration from S3: $bucket/$jobFolder"
 Read-S3Object -BucketName $bucket -KeyPrefix "$jobFolder" -Folder 'C:/mq-job'
 Write-Host "Starting MaxQuant Job"
 C:/MaxQuant/bin/MaxQuantCmd.exe C:/mq-job/mq-job.xml
