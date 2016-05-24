@@ -6,6 +6,7 @@ import sys
 import random
 import yaml
 import boto3
+import botocore
 import mqEC2worker
 
 def parseConfig(config):
@@ -100,6 +101,23 @@ def createMqConfig(mqparams, template):
     return mqconfig
 
 
+def checkJobAlreadyExists(mqBucket, jobFolder):
+    """
+    Check to see if the job already exists to avoid overwritting it
+    """
+    s3 = boto3.resource('s3', 'us-west-2')
+    exists = False
+    try:
+        s3.Object(mqBucket, "{0}/mq-job.xml".format(jobFolder)).load()
+    except botocore.exceptions.ClientError as e:
+        if e.response['Error']['Code'] == "404":
+            exists = False
+        else:
+            raise e
+    else:
+        exists = True
+    return exists
+
 def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     client = boto3.client('s3', 'us-west-2')
     transfer = boto3.s3.transfer.S3Transfer(client)
@@ -157,6 +175,9 @@ def main(configIn, template):
     print(" Done!")
     mqBucket = "fredhutch-maxquant-jobs"
     jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
+    if checkJobAlreadyExists(mqBucket, jobFolder):
+        print("\nThere is already an existing job named '{0}' for the '{1}' department/lab; choose a different job name and try again".format(mqparams['jobName'], mqparams['department']))
+        sys.exit(1)
     uploadS3(mqBucket, jobFolder, mqparams, configOut)
     startWorker(mqBucket, mqparams)
     print("\nYour MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
