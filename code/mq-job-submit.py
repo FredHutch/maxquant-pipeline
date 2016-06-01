@@ -155,7 +155,7 @@ def startWorker(mqBucket, mqparams):
     instanceType = mqparams['instanceType']
     subnetId = 'subnet-a95a0ede'
     #volumeSize = 100
-    volumeSize = (getDataSize(mqparams['mzxmlFilesRaw']) x 2) + 20
+    volumeSize = (getDataSize(mqparams['mzxmlFilesRaw']) * 2) + 50 
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = mqEC2worker.find_image(region)
