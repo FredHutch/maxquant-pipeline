@@ -2,6 +2,7 @@
 """
 mqconfig.py: Converts YAML MaxQaunt job configuration to an XML configuration format suitable for running a job
 """
+import os
 import sys
 import random
 import yaml
@@ -85,6 +86,14 @@ def pickInstanceType(mzxmlFilesRaw):
             threads = "36"
     return instanceType, threads
 
+def getDataSize(start_path = '.'):
+    total_size = 0
+    for dirpath, dirnames, filenames in os.walk(start_path):
+        for f in filenames:
+            fp = os.path.join(dirpath, f)
+            total_size += os.path.getsize(fp)
+    return total_size / 1000 / 1000 / 1000
+
 def passwordGen(plength):
     chars = '0123456789abcdefghijklmnopqrstuvwxyzABCDEFGHIJKLMNOPQRSTUVWXYZ!'
     p = []
@@ -146,7 +155,8 @@ def startWorker(mqBucket, mqparams):
     securityGroups = ['sg-a2dd8dc6']
     instanceType = mqparams['instanceType']
     subnetId = 'subnet-a95a0ede'
-    volumeSize = 100
+    #volumeSize = 100
+    volumeSize = (getDataSize() x 2) + 20
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = mqEC2worker.find_image(region)
