@@ -142,6 +142,13 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     sys.stdout.write("\nUploading configuration file...")
     transfer.upload_file(configOut, mqBucket, "{0}/{1}".format(jobFolder, configOut))
     print(" Done!")
+
+    # If a custom database was provided, upload it to the job folder in S3
+    if mqparams['database']:
+        sys.stdout.write("\nUploading custom databases.xml file...")
+        transfer.upload_file(mqparams['database'], mqBucket, "{0}/{1}".format(jobFolder, mqparams['database']))
+        print(" Done!")
+
     sys.stdout.write("\nSetting Job Ready Flag...")
     client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']), Bucket = mqBucket, Key="{0}/jobCtrl/jobinfo.txt".format(jobFolder))
     client.put_object(Body="ready", Bucket = mqBucket, Key="{0}/jobCtrl/ready.txt".format(jobFolder))
@@ -175,6 +182,12 @@ def main(configIn, template):
     sys.stdout.write("Parsing job configuration file: {0}...".format(configIn))
     mqparams = parseConfig(configIn)
     print(" Done!")
+    
+    # If a custom 'databases.xml' file is found alongside the job, include it.
+    if os.path.isfile("databases.xml"):
+        print("Found custom 'databases.xml' file...")
+        mqparams['database'] = "databases.xml"
+    
     configOut = "mq-job.xml"
     sys.stdout.write("Generating MaxQuant configuration file: {0}...".format(configOut))
     template = open(template).read()
