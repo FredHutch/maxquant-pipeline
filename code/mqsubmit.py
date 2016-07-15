@@ -144,7 +144,7 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     print(" Done!")
 
     # If a custom database was provided, upload it to the job folder in S3
-    if mqparams['database']:
+    if 'database' in mqparams:
         sys.stdout.write("\nUploading custom databases.xml file...")
         transfer.upload_file(mqparams['database'], mqBucket, "{0}/{1}".format(jobFolder, mqparams['database']))
         print(" Done!")
