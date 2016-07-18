@@ -22,15 +22,15 @@ def parseConfig(config):
         # Parse and format the list of imput mzXML files. As returns the formated 'experiments', 'fractions' and 'paramGroupIndices' parameters
         mzxmlFiles = [e.strip() for e in mqparams['mzxmlFiles'].split(',')]
         mqparams['mzxmlFilesRaw'] = [e.strip() for e in mqparams['mzxmlFiles'].split(',')]
-        mqparams['mzxmlFiles'] = "\n".join(map(lambda x: " " * 8 + "<string>C:/mq-job/{0}</string>".format(x), mzxmlFiles))
-        mqparams['experiments'] = "\n".join(map(lambda x: " " * 8 + "<string/>", mzxmlFiles))
-        mqparams['fractions'] = "\n".join(map(lambda x: " " * 8 + "<short>32767</short>", mzxmlFiles))
-        mqparams['paramGroupIndices'] = "\n".join(map(lambda x: " " * 8 + "<int>0</int>", mzxmlFiles))
+        mqparams['mzxmlFiles'] = "\n".join(map(lambda x: " " * 6 + "<string>C:/mq-job/{0}</string>".format(x), mzxmlFiles))
+        mqparams['experiments'] = "\n".join(map(lambda x: " " * 6 + "<string />", mzxmlFiles))
+        mqparams['fractions'] = "\n".join(map(lambda x: " " * 6 + "<short>32767</short>", mzxmlFiles))
+        mqparams['paramGroupIndices'] = "\n".join(map(lambda x: " " * 6 + "<int>0</int>", mzxmlFiles))
 
         # Parse and format the list of fasta files.
         fastaFiles = [e.strip() for e in mqparams['fastaFiles'].split(',')]
         mqparams['fastaFilesRaw'] = [e.strip() for e in mqparams['fastaFiles'].split(',')]
-        mqparams['fastaFiles'] = "\n".join(map(lambda x: " " * 8 + "<string>C:/mq-job/{0}</string>".format(x), fastaFiles))
+        mqparams['fastaFiles'] = "\n".join(map(lambda x: " " * 6 + "<string>C:/mq-job/{0}</string>".format(x), fastaFiles))
 
         # Parse and format the heavy labels.
         heavyLabels = ";".join([e.strip() for e in mqparams['heavyLabels'].split(',')])
@@ -46,11 +46,11 @@ def parseConfig(config):
 
         # Parse and format the fixed modifications.
         fixedModifications = [e.strip() for e in mqparams['fixedModifications'].split(',')]
-        mqparams['fixedModifications'] = "\n".join(map(lambda x: " " * 8 + "<string>{0}</string>".format(x), fixedModifications))
+        mqparams['fixedModifications'] = "\n".join(map(lambda x: " " * 6 + "<string>{0}</string>".format(x), fixedModifications))
 
         # Parse and format the restriction modifications.
         restrictionModifications = [e.strip() for e in mqparams['restrictionModifications'].split(',')]
-        mqparams['restrictionModifications'] = "\n".join(map(lambda x: " " * 8 + "<string>{0}</string>".format(x), restrictionModifications))
+        mqparams['restrictionModifications'] = "\n".join(map(lambda x: " " * 6 + "<string>{0}</string>".format(x), restrictionModifications))
 
         mqparams['multiplicity'] = str(mqparams['multiplicity']).strip()
         mqparams['threads'] = pickInstanceType(mqparams['mzxmlFilesRaw'])[1]
@@ -142,6 +142,13 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
     sys.stdout.write("\nUploading configuration file...")
     transfer.upload_file(configOut, mqBucket, "{0}/{1}".format(jobFolder, configOut))
     print(" Done!")
+
+    # If a custom database was provided, upload it to the job folder in S3
+    if 'database' in mqparams:
+        sys.stdout.write("\nUploading custom databases.xml file...")
+        transfer.upload_file(mqparams['database'], mqBucket, "{0}/{1}".format(jobFolder, mqparams['database']))
+        print(" Done!")
+
     sys.stdout.write("\nSetting Job Ready Flag...")
     client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']), Bucket = mqBucket, Key="{0}/jobCtrl/jobinfo.txt".format(jobFolder))
     client.put_object(Body="ready", Bucket = mqBucket, Key="{0}/jobCtrl/ready.txt".format(jobFolder))
@@ -175,6 +182,12 @@ def main(configIn, template):
     sys.stdout.write("Parsing job configuration file: {0}...".format(configIn))
     mqparams = parseConfig(configIn)
     print(" Done!")
+    
+    # If a custom 'databases.xml' file is found alongside the job, include it.
+    if os.path.isfile("databases.xml"):
+        print("Found custom 'databases.xml' file...")
+        mqparams['database'] = "databases.xml"
+    
     configOut = "mq-job.xml"
     sys.stdout.write("Generating MaxQuant configuration file: {0}...".format(configOut))
     template = open(template).read()
@@ -182,6 +195,7 @@ def main(configIn, template):
     with open(configOut, 'w') as out:
         out.write(mqconfig)
     print(" Done!")
+    os.popen("/usr/bin/unix2dos %s >> /dev/null 2>&1" % configOut)
     mqBucket = "fredhutch-maxquant-jobs"
     jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
     if checkJobAlreadyExists(mqBucket, jobFolder):
@@ -197,7 +211,7 @@ if __name__ == "__main__":
         sys.exit(1)
     else:
         configIn = sys.argv[1].strip()
-        template = '/app/maxquant/0.1/mqpar.xml.template'
-        os.environ["AWS_ACCESS_KEY_ID"] = "access key goes here"
-        os.environ["AWS_SECRET_ACCESS_KEY"] = "secret key goes here"
+        template = '/app/maxquant/0.2/mqpar.xml.template'
+        os.environ["AWS_ACCESS_KEY_ID"] = "key goes here"
+        os.environ["AWS_SECRET_ACCESS_KEY"] = "secret keys goes here"
         main(configIn, template)

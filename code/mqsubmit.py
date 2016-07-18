@@ -207,7 +207,7 @@ def main(configIn, template):
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
-        print("Usage: ./{} <inputYAMLconfigFile>".format(sys.argv[0]))
+        print("Usage: mqsubmit <inputYAMLconfigFile>")
         sys.exit(1)
     else:
         configIn = sys.argv[1].strip()
