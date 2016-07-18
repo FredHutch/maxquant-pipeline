@@ -4,6 +4,7 @@
    <maxQuantVersion>1.5.3.30</maxQuantVersion>
    <tempFolder />
    <numThreads>{threads}</numThreads>
+   <sendEmail>false</sendEmail>
    <fixedCombinedFolder />
    <ionCountIntensities>false</ionCountIntensities>
    <verboseColumnHeaders>false</verboseColumnHeaders>
