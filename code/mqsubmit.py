@@ -195,7 +195,7 @@ def main(configIn, template):
     with open(configOut, 'w') as out:
         out.write(mqconfig)
     print(" Done!")
-    os.popen("/usr/bin/uxix2dos %s" % configOut)
+    os.popen("/usr/bin/unix2dos %s >> /dev/null 2>&1" % configOut)
     mqBucket = "fredhutch-maxquant-jobs"
     jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
     if checkJobAlreadyExists(mqBucket, jobFolder):
