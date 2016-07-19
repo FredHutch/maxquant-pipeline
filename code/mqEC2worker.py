@@ -54,7 +54,7 @@ Write-Host "Downloading job data and configuration from S3: $bucket/$jobFolder"
 Read-S3Object -BucketName $bucket -KeyPrefix "$jobFolder" -Folder 'C:/mq-job'
 if (Test-Path 'C:/mq-job/databases.xml') {{Copy-Item 'C:/mq-job/databases.xml' -Destination 'C:/MaxQuant/bin/conf/'}} 
 Write-Host "Starting MaxQuant Job"
-C:/MaxQuant/bin/MaxQuantCmd.exe C:/mq-job/mq-job.xml
+C:/MaxQuant/bin/MaxQuantCmd.exe C:/mq-job/mqpar.xml
 Write-Host "Job complete, uploading job results to S3"
 Write-S3Object -BucketName $bucket -KeyPrefix "$jobFolder/combined" -Folder 'C:/mq-job/combined' -Recurse
 Write-Host "Removing running flag: $jobFolder/jobCtrl/running.txt"

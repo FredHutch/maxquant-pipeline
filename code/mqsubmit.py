@@ -24,11 +24,6 @@ def parseConfig(config):
         mqparams['jobName'] = mqparams['jobName'].strip()
         mqparams['department'] = mqparams['department'].strip()
         mqparams['contactEmail'] = mqparams['contactEmail'].strip()
-        
-        # If a custom 'databases.xml' file is found alongside the job, include it.
-        if os.path.isfile("databases.xml"):
-            print("Found custom 'databases.xml' file...")
-            mqparams['database'] = "databases.xml"
 
         # return a dictionary of formated MQ parameters.
         return mqparams
@@ -43,16 +38,18 @@ def adjustConfig(mqconfig, mqdir):
     for filePaths in root.findall('filePaths'):
         files = filePaths.findall('string')
         for d in files:
-            datafiles.append(d.text) 
-            dpath = mqdir + (d.text).split('/')[-1]
+            dfile = (d.text).split('\\')[-1]
+            datafiles.append(dfile)
+            dpath = mqdir + dfile
             d.text = dpath 
 
     fastas = []
     for fastaFiles in root.findall('fastaFiles'):
         fasta = fastaFiles.findall('string')
         for f in fasta:
-            fastas.append(f.text) 
-            fpath = mqdir + (f.text).split('/')[-1]
+            ffile = (f.text).split('\\')[-1]
+            fastas.append(ffile) 
+            fpath = mqdir + ffile
             f.text = fpath 
 
     tree.write(mqconfig)
@@ -60,7 +57,7 @@ def adjustConfig(mqconfig, mqdir):
 
 
 def pickInstanceType(mzxmlFiles):
-    fileCount = len(mzxmlFilesRaw)
+    fileCount = len(mzxmlFiles)
     if fileCount <= 2:
         instanceType = "c4.large"
         threads = str(fileCount)
@@ -113,10 +110,10 @@ def checkJobAlreadyExists(mqBucket, jobFolder):
         exists = True
     return exists
 
-def uploadS3(mqBucket, jobFolder, mqparams, configOut):
+def uploadS3(mqBucket, jobFolder, mqparams, mqconfig):
     client = boto3.client('s3', 'us-west-2')
     transfer = boto3.s3.transfer.S3Transfer(client)
-    print("\nUploading MZXML file(s)...".format(configIn))
+    print("\nUploading data file(s)...")
     for f in mqparams['mzxmlFiles']:
         sys.stdout.write("\tUploading: {0}...".format(f))
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
@@ -127,7 +124,7 @@ def uploadS3(mqBucket, jobFolder, mqparams, configOut):
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
         print(" Done!")
     sys.stdout.write("\nUploading configuration file...")
-    transfer.upload_file(configOut, mqBucket, "{0}/{1}".format(jobFolder, configOut))
+    transfer.upload_file(mqconfig, mqBucket, "{0}/{1}".format(jobFolder, mqconfig))
     print(" Done!")
 
     # If a custom database was provided, upload it to the job folder in S3
@@ -149,7 +146,7 @@ def startWorker(mqBucket, mqparams):
     instanceType = mqparams['instanceType']
     subnetId = 'subnet-a95a0ede'
     #volumeSize = 100
-    volumeSize = (getDataSize(mqparams['mzxmlFilesRaw']) * 2) + 50 
+    volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 2) + 50 
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = mqEC2worker.find_image(region)
@@ -170,8 +167,14 @@ def main(configIn, mqconfig):
     mqparams = parseConfig(configIn)
     print(" Done!")
 
+    # If a custom 'databases.xml' file is found alongside the job, include it.
+    if os.path.isfile("databases.xml"):
+        print("Found custom 'databases.xml' file...")
+        mqparams['database'] = "databases.xml"
+
+
     mqBucket = "fredhutch-maxquant-jobs"
-    mqdir = "c:/mq-job/"
+    mqdir = "c:\\mq-job\\"
     jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
     
     sys.stdout.write("Adjusting MaxQuant configuration file: {0}...".format(mqconfig))
@@ -185,7 +188,7 @@ def main(configIn, mqconfig):
     if checkJobAlreadyExists(mqBucket, jobFolder):
         print("\nThere is already an existing job named '{0}' for the '{1}' department/lab; choose a different job name and try again".format(mqparams['jobName'], mqparams['department']))
         sys.exit(1)
-    uploadS3(mqBucket, jobFolder, mqparams, configOut)
+    uploadS3(mqBucket, jobFolder, mqparams, mqconfig)
     startWorker(mqBucket, mqparams)
     print("\nYour MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
 
