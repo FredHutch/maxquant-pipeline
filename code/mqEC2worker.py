@@ -44,8 +44,8 @@ Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MSFileReader_3.0SP3.msi' -F
 Write-Host "Installing MSFileReader_3.0SP3.msi"
 Start-Process "C:/MSFileReader_3.0SP3.msi" /qn -Wait
 Write-Host "Downloading MaxQuant application"
-Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MaxQuant_1.5.3.30.zip' -File 'C:/MaxQuant_1.5.3.30.zip'
-$BackUpPath = 'C:/MaxQuant_1.5.3.30.zip'
+Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MaxQuant_1.5.5.1.zip' -File 'C:/MaxQuant_1.5.5.1.zip'
+$BackUpPath = 'C:/MaxQuant_1.5.5.1.zip'
 $Destination = 'C:/'
 Write-Host "Unzipping MaxQuant application"
 Add-Type -assembly "system.io.compression.filesystem"
