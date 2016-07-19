@@ -119,7 +119,7 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
 
 
     # Tag the EC2 instance
-    time.sleep(10)
+    time.sleep(15)
     sys.stdout.write("\nTagging EC2 instance...")
     ec2.create_tags(Resources=["{0}".format(instanceId)],
         Tags=[{'Key': 'Name', 'Value': "maxquant-{0}-{1}".format(mqparams['department'], mqparams['jobName'])},
@@ -130,6 +130,18 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
             {'Key': 'sle', 'Value': 'hours=variable / grant=no / phi=no / pii=no / public=no'}
             ])
     print(" Done!")
+    return instanceId
+
+
+def getInstanceIP(region, instanceID):
+    # Connect to AWS
+    ec2 = boto3.resource('ec2', region_name = "{0}".format(region))
+    # Get instance object
+    i = ec2.Instance(instanceID)
+    # Get instance private IP
+    ipAddr = i.private_ip_address
+    return ipAddr
+
 
 def find_image(region):
     """
@@ -156,9 +168,10 @@ def find_image(region):
     print(" Selected {0}".format(ami))
     return(ami)
 
+
 def main():
     image_id = find_image(region)
-    create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData)
+    create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
 
 if __name__ == "__main__":
     main()

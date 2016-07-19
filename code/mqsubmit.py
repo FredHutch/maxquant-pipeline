@@ -30,7 +30,7 @@ def parseConfig(config):
     except:
         raise Exception("Error opening or parsing configuration file: {0}".format(config) )
 
-def adjustConfig(mqconfig, mqdir):
+def adjustConfig(mqconfig, mqdir, mqparams):
     tree = ET.parse(mqconfig)
     root = tree.getroot()
 
@@ -51,8 +51,13 @@ def adjustConfig(mqconfig, mqdir):
             fastas.append(ffile) 
             fpath = mqdir + ffile
             f.text = fpath 
+    
+    threads = pickInstanceType(filePaths)[1]
+    cthreads = root.find('numThreads')
+    cthreads.text = threads 
 
     tree.write(mqconfig)
+    os.popen("/usr/bin/unix2dos %s >> /dev/null 2>&1" % mqconfig)
     return datafiles, fastas
 
 
@@ -150,7 +155,8 @@ def startWorker(mqBucket, mqparams):
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = mqEC2worker.find_image(region)
-    mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
+    instanceID = mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
+    return instanceID, password
 
 def genTempUrl(mqBucket, jobFolder):
     client = boto3.client('s3')
@@ -178,19 +184,27 @@ def main(configIn, mqconfig):
     jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
     
     sys.stdout.write("Adjusting MaxQuant configuration file: {0}...".format(mqconfig))
-    datafiles, fastas = adjustConfig(mqconfig, mqdir)
-    
+    datafiles, fastas = adjustConfig(mqconfig, mqdir, mqparams)
+    print(" Done!")
+
     mqparams['mzxmlFiles'] = [e.strip() for e in datafiles]
     mqparams['fastaFiles'] = [e.strip() for e in fastas]
-    mqparams['threads'] = pickInstanceType(mqparams['mzxmlFiles'])[1]
     mqparams['instanceType'] = pickInstanceType(mqparams['mzxmlFiles'])[0]
-   
+
     if checkJobAlreadyExists(mqBucket, jobFolder):
         print("\nThere is already an existing job named '{0}' for the '{1}' department/lab; choose a different job name and try again".format(mqparams['jobName'], mqparams['department']))
         sys.exit(1)
     uploadS3(mqBucket, jobFolder, mqparams, mqconfig)
-    startWorker(mqBucket, mqparams)
+    instanceID, password = startWorker(mqBucket, mqparams)
+    instanceIP = mqEC2worker.getInstanceIP('us-west-2', instanceID)
     print("\nYour MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
+    print("\nIf you would like to RDP into the running MaxQuant instance to watch (do not interupt) the progress of your job here is the information you need:")
+    print("\tServer: {0}".format(instanceIP))
+    print("\tUsername: {0}".format("Administrator"))
+    print("\tDomain: {0}".format("None - leave blank"))
+    print("\tPassword: {0}".format(password))
+    print("\tStatus files: {0}".format('C:\\mq-job\\combined\\proc\\*'))
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
