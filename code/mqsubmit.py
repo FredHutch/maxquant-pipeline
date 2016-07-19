@@ -1,6 +1,6 @@
 #!/usr/bin/python
 """
-mqconfig.py: Converts YAML MaxQaunt job configuration to an XML configuration format suitable for running a job
+mqsubmit.py: submits a maxquant job to the cloud based automation pipeline
 """
 import os
 import sys
@@ -9,6 +9,7 @@ import yaml
 import boto3
 import botocore
 import mqEC2worker
+import xml.etree.ElementTree as ET
 
 def parseConfig(config):
     """
@@ -20,41 +21,6 @@ def parseConfig(config):
             mqparams = yaml.load(f)
 
         # Parse and format the list of imput mzXML files. As returns the formated 'experiments', 'fractions' and 'paramGroupIndices' parameters
-        mzxmlFiles = [e.strip() for e in mqparams['mzxmlFiles'].split(',')]
-        mqparams['mzxmlFilesRaw'] = [e.strip() for e in mqparams['mzxmlFiles'].split(',')]
-        mqparams['mzxmlFiles'] = "\n".join(map(lambda x: " " * 6 + "<string>C:/mq-job/{0}</string>".format(x), mzxmlFiles))
-        mqparams['experiments'] = "\n".join(map(lambda x: " " * 6 + "<string />", mzxmlFiles))
-        mqparams['fractions'] = "\n".join(map(lambda x: " " * 6 + "<short>32767</short>", mzxmlFiles))
-        mqparams['paramGroupIndices'] = "\n".join(map(lambda x: " " * 6 + "<int>0</int>", mzxmlFiles))
-
-        # Parse and format the list of fasta files.
-        fastaFiles = [e.strip() for e in mqparams['fastaFiles'].split(',')]
-        mqparams['fastaFilesRaw'] = [e.strip() for e in mqparams['fastaFiles'].split(',')]
-        mqparams['fastaFiles'] = "\n".join(map(lambda x: " " * 6 + "<string>C:/mq-job/{0}</string>".format(x), fastaFiles))
-
-        # Parse and format the heavy labels.
-        heavyLabels = ";".join([e.strip() for e in mqparams['heavyLabels'].split(',')])
-        mqparams['heavyLabels'] = " " * 12 + "<string>{0}</string>".format(heavyLabels)
-
-        # Parse and format the variable modifications.
-        variableModifications = [e.strip() for e in mqparams['variableModifications'].split(',')]
-        mqparams['variableModifications'] = "\n".join(map(lambda x: " " * 12 + "<string>{0}</string>".format(x), variableModifications))
-
-        # Parse and format the enzymes.
-        enzymes = [e.strip() for e in mqparams['enzymes'].split(',')]
-        mqparams['enzymes'] = "\n".join(map(lambda x: " " * 12 + "<string>{0}</string>".format(x), enzymes))
-
-        # Parse and format the fixed modifications.
-        fixedModifications = [e.strip() for e in mqparams['fixedModifications'].split(',')]
-        mqparams['fixedModifications'] = "\n".join(map(lambda x: " " * 6 + "<string>{0}</string>".format(x), fixedModifications))
-
-        # Parse and format the restriction modifications.
-        restrictionModifications = [e.strip() for e in mqparams['restrictionModifications'].split(',')]
-        mqparams['restrictionModifications'] = "\n".join(map(lambda x: " " * 6 + "<string>{0}</string>".format(x), restrictionModifications))
-
-        mqparams['multiplicity'] = str(mqparams['multiplicity']).strip()
-        mqparams['threads'] = pickInstanceType(mqparams['mzxmlFilesRaw'])[1]
-        mqparams['instanceType'] = pickInstanceType(mqparams['mzxmlFilesRaw'])[0]
         mqparams['jobName'] = mqparams['jobName'].strip()
         mqparams['department'] = mqparams['department'].strip()
         mqparams['contactEmail'] = mqparams['contactEmail'].strip()
@@ -64,8 +30,39 @@ def parseConfig(config):
     except:
         raise Exception("Error opening or parsing configuration file: {0}".format(config) )
 
-def pickInstanceType(mzxmlFilesRaw):
-    fileCount = len(mzxmlFilesRaw)
+def adjustConfig(mqconfig, mqdir, mqparams):
+    tree = ET.parse(mqconfig)
+    root = tree.getroot()
+
+    datafiles = []
+    for filePaths in root.findall('filePaths'):
+        files = filePaths.findall('string')
+        for d in files:
+            dfile = (d.text).split('\\')[-1]
+            datafiles.append(dfile)
+            dpath = mqdir + dfile
+            d.text = dpath 
+
+    fastas = []
+    for fastaFiles in root.findall('fastaFiles'):
+        fasta = fastaFiles.findall('string')
+        for f in fasta:
+            ffile = (f.text).split('\\')[-1]
+            fastas.append(ffile) 
+            fpath = mqdir + ffile
+            f.text = fpath 
+    
+    threads = pickInstanceType(filePaths)[1]
+    cthreads = root.find('numThreads')
+    cthreads.text = threads 
+
+    tree.write(mqconfig)
+    os.popen("/usr/bin/unix2dos %s >> /dev/null 2>&1" % mqconfig)
+    return datafiles, fastas
+
+
+def pickInstanceType(mzxmlFiles):
+    fileCount = len(mzxmlFiles)
     if fileCount <= 2:
         instanceType = "c4.large"
         threads = str(fileCount)
@@ -100,14 +97,6 @@ def passwordGen(plength):
         p.append(random.choice(chars))
     return(''.join(p))
 
-def createMqConfig(mqparams, template):
-    """
-    Takes a dictionary of decorated MaxQuant job parameters and renders and
-    returns a MaxQuant job configuration in the requried XML format
-    """
-    mqconfig = template.format(**mqparams)
-    return mqconfig
-
 
 def checkJobAlreadyExists(mqBucket, jobFolder):
     """
@@ -126,21 +115,21 @@ def checkJobAlreadyExists(mqBucket, jobFolder):
         exists = True
     return exists
 
-def uploadS3(mqBucket, jobFolder, mqparams, configOut):
+def uploadS3(mqBucket, jobFolder, mqparams, mqconfig):
     client = boto3.client('s3', 'us-west-2')
     transfer = boto3.s3.transfer.S3Transfer(client)
-    print("\nUploading MZXML file(s)...".format(configIn))
-    for f in mqparams['mzxmlFilesRaw']:
+    print("\nUploading data file(s)...")
+    for f in mqparams['mzxmlFiles']:
         sys.stdout.write("\tUploading: {0}...".format(f))
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
         print(" Done!")
     print("\nUploading FASTA file(s)...".format(configIn))
-    for f in mqparams['fastaFilesRaw']:
+    for f in mqparams['fastaFiles']:
         sys.stdout.write("\tUploading: {0}...".format(f))
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
         print(" Done!")
     sys.stdout.write("\nUploading configuration file...")
-    transfer.upload_file(configOut, mqBucket, "{0}/{1}".format(jobFolder, configOut))
+    transfer.upload_file(mqconfig, mqBucket, "{0}/{1}".format(jobFolder, mqconfig))
     print(" Done!")
 
     # If a custom database was provided, upload it to the job folder in S3
@@ -162,11 +151,12 @@ def startWorker(mqBucket, mqparams):
     instanceType = mqparams['instanceType']
     subnetId = 'subnet-a95a0ede'
     #volumeSize = 100
-    volumeSize = (getDataSize(mqparams['mzxmlFilesRaw']) * 2) + 50 
+    volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 2) + 50 
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = mqEC2worker.find_image(region)
-    mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
+    instanceID = mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
+    return instanceID, password
 
 def genTempUrl(mqBucket, jobFolder):
     client = boto3.client('s3')
@@ -175,35 +165,46 @@ def genTempUrl(mqBucket, jobFolder):
     url = client.generate_presigned_url('get_object', Params = {'Bucket': mqBucket, 'Key': "{0}/{1}".format(jobFolder, resultsBundleFile)}, ExpiresIn = expiresIn)
     return url
 
-def main(configIn, template):
+def main(configIn, mqconfig):
     """
     When run stand-alone (not imported), execution starts here
     """
     sys.stdout.write("Parsing job configuration file: {0}...".format(configIn))
     mqparams = parseConfig(configIn)
     print(" Done!")
-    
+
     # If a custom 'databases.xml' file is found alongside the job, include it.
     if os.path.isfile("databases.xml"):
         print("Found custom 'databases.xml' file...")
         mqparams['database'] = "databases.xml"
-    
-    configOut = "mq-job.xml"
-    sys.stdout.write("Generating MaxQuant configuration file: {0}...".format(configOut))
-    template = open(template).read()
-    mqconfig = createMqConfig(mqparams, template)
-    with open(configOut, 'w') as out:
-        out.write(mqconfig)
-    print(" Done!")
-    os.popen("/usr/bin/unix2dos %s >> /dev/null 2>&1" % configOut)
+
+
     mqBucket = "fredhutch-maxquant-jobs"
+    mqdir = "c:\\mq-job\\"
     jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
+    
+    sys.stdout.write("Adjusting MaxQuant configuration file: {0}...".format(mqconfig))
+    datafiles, fastas = adjustConfig(mqconfig, mqdir, mqparams)
+    print(" Done!")
+
+    mqparams['mzxmlFiles'] = [e.strip() for e in datafiles]
+    mqparams['fastaFiles'] = [e.strip() for e in fastas]
+    mqparams['instanceType'] = pickInstanceType(mqparams['mzxmlFiles'])[0]
+
     if checkJobAlreadyExists(mqBucket, jobFolder):
         print("\nThere is already an existing job named '{0}' for the '{1}' department/lab; choose a different job name and try again".format(mqparams['jobName'], mqparams['department']))
         sys.exit(1)
-    uploadS3(mqBucket, jobFolder, mqparams, configOut)
-    startWorker(mqBucket, mqparams)
+    uploadS3(mqBucket, jobFolder, mqparams, mqconfig)
+    instanceID, password = startWorker(mqBucket, mqparams)
+    instanceIP = mqEC2worker.getInstanceIP('us-west-2', instanceID)
     print("\nYour MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
+    print("\nIf you would like to RDP into the running MaxQuant instance to watch (do not interupt) the progress of your job here is the information you need:")
+    print("\tServer: {0}".format(instanceIP))
+    print("\tUsername: {0}".format("Administrator"))
+    print("\tDomain: {0}".format("None - leave blank"))
+    print("\tPassword: {0}".format(password))
+    print("\tStatus files: {0}".format('C:\\mq-job\\combined\\proc\\*'))
+
 
 if __name__ == "__main__":
     if len(sys.argv) != 2:
@@ -211,5 +212,5 @@ if __name__ == "__main__":
         sys.exit(1)
     else:
         configIn = sys.argv[1].strip()
-        template = 'mqpar.xml.template'
-        main(configIn, template)
+        mqconfig = 'mqpar.xml'
+        main(configIn, mqconfig)
