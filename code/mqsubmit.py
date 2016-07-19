@@ -198,7 +198,7 @@ def main(configIn, mqconfig):
     instanceID, password = startWorker(mqBucket, mqparams)
     instanceIP = mqEC2worker.getInstanceIP('us-west-2', instanceID)
     print("\nYour MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
-    print("\nIf you would like to RDP into the running MaxQuant instance to watch (do not interupt) the progress of your job here is the information you need:")
+    print("\nIf you would like to RDP into the running MaxQuant instance to watch (do not interupt) the progress of your job, here is the information you need:")
     print("\tServer: {0}".format(instanceIP))
     print("\tUsername: {0}".format("Administrator"))
     print("\tDomain: {0}".format("None - leave blank"))
