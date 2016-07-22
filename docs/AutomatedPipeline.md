@@ -23,29 +23,28 @@ After your data and sequence files are in place, go to your MaxQuant workstation
 
 Next start MaxQuant and load the datafiles that are located in your job folder:
 
-[[/AutomatedPipeline/datafiles-path.png]] 
-
+![](/docs/AutomatedPipeline/datafiles-path.png)
 
 Next load the sequence files:
 
-[[/AutomatedPipeline/fasta-file-path.png]]
+![](/docs/AutomatedPipeline/fasta-file-path.png)
 
 Configure the rest of the MaxQuant configuration options, labels, digestion, modifications, etc... to suit the needs of your job. When you are done configuring your job. Click on the book button in the upper left of MaxQuant GUI to reveal the menu that allows you to save your configured job parameters:
 
-[[/AutomatedPipeline/save-parameters.png]]
+![](/docs/AutomatedPipeline/save-parameters.png)
 
 Save your job configuration to your maxquant job folder (X:\fast\mcdermott_r\maxquant-job01 in this example):
 
-[[/AutomatedPipeline/save-parameters-dialog.png]]
+![](/docs/AutomatedPipeline/save-parameters-dialog.png)
 
 
 If you are using a sequence file (fasta) that is not included in the default MaxQuant sequence database, you will need to add it to the sequence database configuration. You can do this via the MaxQuant GUI like this:
 
-[[/AutomatedPipeline/modify-seq-databases.png]]
+![](/docs/AutomatedPipeline/modify-seq-databases.png)
 
 Next you will need to copy the customized "databases.xml" file from the MaxQuant application directory to your job directory. In this example, my custom databases.xml file was located at ***C:\Maxquant\bin\conf\databases.xml***: 
 
-[[/AutomatedPipeline/databases-file.png]]
+![](/docs/AutomatedPipeline/databases-file.png)
 
 ## mqsubmit
 
