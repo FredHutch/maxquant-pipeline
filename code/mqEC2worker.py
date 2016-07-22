@@ -118,8 +118,10 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
     print(" Instance {0} created".format(instanceId))
 
 
-    # Tag the EC2 instance
+    # Sleep for a bit to make sure the instances are ready to be tagged 
     time.sleep(15)
+
+    # Tag the job server
     sys.stdout.write("\nTagging EC2 instance...")
     ec2.create_tags(Resources=["{0}".format(instanceId)],
         Tags=[{'Key': 'Name', 'Value': "maxquant-{0}-{1}".format(mqparams['department'], mqparams['jobName'])},
@@ -134,7 +136,9 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
 
 
 def getInstanceIP(region, instanceID):
-    # Connect to AWS
+    """
+    Determine the IP address of the jobs server
+    """
     ec2 = boto3.resource('ec2', region_name = "{0}".format(region))
     # Get instance object
     i = ec2.Instance(instanceID)
