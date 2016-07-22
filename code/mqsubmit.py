@@ -3,32 +3,16 @@
 mqsubmit.py: submits a maxquant job to the cloud based automation pipeline
 """
 import os
+import optparse
 import sys
 import random
+import re
 import yaml
 import boto3
 import botocore
 import mqEC2worker
 import xml.etree.ElementTree as ET
 
-def parseConfig(config):
-    """
-    Parses a YAML formated MaxQuant job configuration file, formats the text of
-    the variables and returns the configuration parameters in a dictionary
-    """
-    try:
-        with open(config, 'r') as f:
-            mqparams = yaml.load(f)
-
-        # Parse and format the list of imput mzXML files. As returns the formated 'experiments', 'fractions' and 'paramGroupIndices' parameters
-        mqparams['jobName'] = mqparams['jobName'].strip()
-        mqparams['department'] = mqparams['department'].strip()
-        mqparams['contactEmail'] = mqparams['contactEmail'].strip()
-
-        # return a dictionary of formated MQ parameters.
-        return mqparams
-    except:
-        raise Exception("Error opening or parsing configuration file: {0}".format(config) )
 
 def adjustConfig(mqconfig, mqdir, mqparams):
     tree = ET.parse(mqconfig)
@@ -123,7 +107,7 @@ def uploadS3(mqBucket, jobFolder, mqparams, mqconfig):
         sys.stdout.write("\tUploading: {0}...".format(f))
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
         print(" Done!")
-    print("\nUploading FASTA file(s)...".format(configIn))
+    print("\nUploading FASTA file(s)...".format(mqconfig))
     for f in mqparams['fastaFiles']:
         sys.stdout.write("\tUploading: {0}...".format(f))
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
@@ -165,13 +149,28 @@ def genTempUrl(mqBucket, jobFolder):
     url = client.generate_presigned_url('get_object', Params = {'Bucket': mqBucket, 'Key': "{0}/{1}".format(jobFolder, resultsBundleFile)}, ExpiresIn = expiresIn)
     return url
 
-def main(configIn, mqconfig):
+
+def checkfiles(files):
+    """Check to see if the files exists before attempting to upload"""
+    missing = []
+    for f in files:
+        if not os.path.isfile(f):
+            missing.append(f)
+    if missing:
+        print("Error: the following files were not found in the job directory:")
+        for m in missing:
+            print("\t{0}".format(m))
+        sys.exit(1)
+
+
+def main(parms):
     """
     When run stand-alone (not imported), execution starts here
     """
-    sys.stdout.write("Parsing job configuration file: {0}...".format(configIn))
-    mqparams = parseConfig(configIn)
-    print(" Done!")
+    mqparams = {}
+    mqparams['jobName'] = parms.jobname.strip().replace(' ','')
+    mqparams['department'] = parms.department.strip().replace(' ','')
+    mqparams['contactEmail'] = parms.contact.strip().replace(' ','')
 
     # If a custom 'databases.xml' file is found alongside the job, include it.
     if os.path.isfile("databases.xml"):
@@ -183,9 +182,12 @@ def main(configIn, mqconfig):
     mqdir = "c:\\mq-job\\"
     jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName'])
     
-    sys.stdout.write("Adjusting MaxQuant configuration file: {0}...".format(mqconfig))
-    datafiles, fastas = adjustConfig(mqconfig, mqdir, mqparams)
+    sys.stdout.write("Adjusting MaxQuant configuration file: {0}...".format(parms.mqconfig))
+    datafiles, fastas = adjustConfig(parms.mqconfig, mqdir, mqparams)
     print(" Done!")
+
+    checkfiles(datafiles)
+    checkfiles(fastas)
 
     mqparams['mzxmlFiles'] = [e.strip() for e in datafiles]
     mqparams['fastaFiles'] = [e.strip() for e in fastas]
@@ -194,23 +196,52 @@ def main(configIn, mqconfig):
     if checkJobAlreadyExists(mqBucket, jobFolder):
         print("\nThere is already an existing job named '{0}' for the '{1}' department/lab; choose a different job name and try again".format(mqparams['jobName'], mqparams['department']))
         sys.exit(1)
-    uploadS3(mqBucket, jobFolder, mqparams, mqconfig)
+
+    uploadS3(mqBucket, jobFolder, mqparams, parms.mqconfig)
     instanceID, password = startWorker(mqBucket, mqparams)
     instanceIP = mqEC2worker.getInstanceIP('us-west-2', instanceID)
     print("\nYour MaxQuant job has been successfully submitted. An email will be sent to {0} when complete with a link to download the results".format(mqparams['contactEmail']))
-    print("\nIf you would like to RDP into the running MaxQuant instance to watch (do not interupt) the progress of your job, here is the information you need:")
-    print("\tServer: {0}".format(instanceIP))
-    print("\tUsername: {0}".format("Administrator"))
-    print("\tDomain: {0}".format("None - leave blank"))
-    print("\tPassword: {0}".format(password))
-    print("\tStatus files: {0}".format('C:\\mq-job\\combined\\proc\\*'))
+
+    # If they specified they want server connection info (-c or --connect) print it.
+    if parms.connect:
+        print("\nIf you would like to RDP into the running MaxQuant instance to watch (do not interupt) the progress of your job, here is the information you need:")
+        print("\tServer: {0}".format(instanceIP))
+        print("\tUsername: {0}".format("Administrator"))
+        print("\tDomain: {0}".format("None - leave blank"))
+        print("\tPassword: {0}".format(password))
+        print("\tStatus files: {0}".format('C:\\mq-job\\combined\\proc\\*'))
+
+
+def checkRequiredArguments(parms, p):
+    """check to make sure all required parameters where provided"""
+    missing_options = []
+    for option in p.option_list:
+        if re.match(r'^\[REQUIRED\]', option.help) and eval('parms.' + option.dest) == None:
+            missing_options.extend(option._long_opts)
+    
+    if len(missing_options) > 0:
+        p.error('Missing REQUIRED parameters: ' + str(missing_options))
+    
+    if not os.path.isfile(parms.mqconfig):
+        p.error("Can't find specified MaxQuant configuration file {0}".format(parms.mqconfig))
 
 
 if __name__ == "__main__":
-    if len(sys.argv) != 2:
-        print("Usage: mqsubmit <inputYAMLconfigFile>")
-        sys.exit(1)
-    else:
-        configIn = sys.argv[1].strip()
-        mqconfig = 'mqpar.xml'
-        main(configIn, mqconfig)
+    p = optparse.OptionParser()
+    
+    # Get the filename of the XML formated maxquant configuration file that was generated by the MaxQuant GUI
+    p.add_option('-m', '--mqconfig',  action='store', type='string', dest='mqconfig', help='[REQUIRED] Filename of the MaxQuant .XML configuration file')
+    # get the name of the maxquant job
+    p.add_option('-n', '--jobname',  action='store', type='string', dest='jobname', help='[REQUIRED] The name of the maxquant job you are running')
+    # get the name of their department/lab
+    p.add_option('-d', '--department',  action='store', type='string', dest='department', help='[REQUIRED] The name of your department or lab')
+    # get their email address so you can email them links to the results
+    p.add_option('-e', '--email',  action='store', type='string', dest='contact', help='[REQUIRED] Your email address; needed so you can receive a results link')
+    # If this flag is used it will print the information needed to connect to the remote maxquant server.
+    p.add_option('-c', '--connect',  action='store_true', dest='connect', help='[OPTIONAL] Prints connection information so you can check on the running job')
+    p.set_defaults(connect=False)
+    parms, args = p.parse_args()
+
+    checkRequiredArguments(parms, p)
+    
+    main(parms)
