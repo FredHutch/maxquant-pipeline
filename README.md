@@ -1,6 +1,6 @@
 # MaxQuant Pipeline
 
-![](/README/MaxQuantLogo.png)
+![](/docs/README/MaxQuantLogo.png)
 
 MaxQuant is a quantitative proteomics software package designed for analyzing large-scale mass-spectrometric data sets. This repository contains contains code and documentation explaining how to run MaxQuant manually or automatically via the Center's cloud based automated pipeline. 
 
