@@ -8,7 +8,10 @@ To submit a MaxQuant job to the pipeline you simply put your data in a job direc
 
 The pipeline automatically selects the appropriate server size (CPU count, RAM and SSD volume size) based on the size of the job that you submit. The current smallest server utilized by the pipeline is 2 CPU cores (2.9 GHz Intel Xeon E5-2666 v3 Haswell) with 4GB of RAM and the largest server instance is 36 CPU cores with 60GB of RAM.
 
+The diagram below provides a high-level view of how the automated pipeline works:
+
 ![](/docs/AutomatedPipeline/maxquant-automation-pipeline-s.png)
+
 
 ## Preparing to Run an Automated MaxQuant Job
 
