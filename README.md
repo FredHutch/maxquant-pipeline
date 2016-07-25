@@ -1,4 +1,4 @@
-# MaxQuant 
+# MaxQuant Pipeline
 
 ![](/README/MaxQuantLogo.png)
 
