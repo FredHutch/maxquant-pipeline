@@ -39,10 +39,10 @@ Write-Host "Removing ready flag: $jobFolder/jobCtrl/ready.txt"
 Remove-S3Object -BucketName $bucket -Key "$jobFolder/jobCtrl/ready.txt" -Force
 Write-Host "Adding running flag: $jobFolder/jobCtrl/running.txt"
 Write-S3Object -BucketName $bucket -Key "$jobFolder/jobCtrl/running.txt" -Content "running"
-Write-Host "Downloading Thermo Fisher MSFileReader 3.0SP3"
-Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MSFileReader_3.0SP3.msi' -File 'C:/MSFileReader_3.0SP3.msi'
-Write-Host "Installing MSFileReader_3.0SP3.msi"
-Start-Process "C:/MSFileReader_3.0SP3.msi" /qn -Wait
+#Write-Host "Downloading Thermo Fisher MSFileReader 3.0SP3"
+#Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MSFileReader_3.0SP3.msi' -File 'C:/MSFileReader_3.0SP3.msi'
+#Write-Host "Installing MSFileReader_3.0SP3.msi"
+#Start-Process "C:/MSFileReader_3.0SP3.msi" /qn -Wait
 Write-Host "Downloading MaxQuant application"
 Read-S3Object -BucketName 'fredhutch-maxquant' -Key 'MaxQuant_1.5.5.1.zip' -File 'C:/MaxQuant_1.5.5.1.zip'
 $BackUpPath = 'C:/MaxQuant_1.5.5.1.zip'
