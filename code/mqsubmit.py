@@ -114,7 +114,7 @@ def checkJobAlreadyExists(mqBucket, jobFolder):
     s3 = boto3.resource('s3', 'us-west-2')
     exists = False
     try:
-        s3.Object(mqBucket, "{0}/mq-job.xml".format(jobFolder)).load()
+        s3.Object(mqBucket, "{0}/mqpar.xml".format(jobFolder)).load()
     except botocore.exceptions.ClientError as e:
         if e.response['Error']['Code'] == "404":
             exists = False
