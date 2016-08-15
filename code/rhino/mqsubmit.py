@@ -142,13 +142,19 @@ def uploadS3(mqBucket, jobFolder, mqparams, mqconfig):
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
         print(" Done!")
     sys.stdout.write("\nUploading configuration file...")
-    transfer.upload_file(mqconfig, mqBucket, "{0}/{1}".format(jobFolder, mqconfig))
+    transfer.upload_file(mqconfig, mqBucket, "{0}/{1}".format(jobFolder, "mqpar.xml"))
     print(" Done!")
 
     # If a custom database was provided, upload it to the job folder in S3
     if 'database' in mqparams:
         sys.stdout.write("\nUploading custom databases.xml file...")
         transfer.upload_file(mqparams['database'], mqBucket, "{0}/{1}".format(jobFolder, mqparams['database']))
+        print(" Done!")
+
+    # If a custom modifications file was provided, upload it to the job folder in S3
+    if 'modifications' in mqparams:
+        sys.stdout.write("\nUploading custom modifications.xml file...")
+        transfer.upload_file(mqparams['modifications'], mqBucket, "{0}/{1}".format(jobFolder, mqparams['modifications']))
         print(" Done!")
 
     sys.stdout.write("\nSetting Job Ready Flag...")
@@ -173,8 +179,8 @@ def startWorker(mqBucket, mqparams):
     volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 2) + 50 
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
-    #image_id = mqEC2worker.find_image(region)
-    image_id = 'ami-59ba7139'  # hack until ThermoFisher MSFileReader can be packaged, when fixed delete this and uncomment line above
+    image_id = mqEC2worker.find_image(region)
+    #image_id = 'ami-59ba7139'  # hack until ThermoFisher MSFileReader can be packaged, when fixed delete this and uncomment line above
     instanceID = mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
     return instanceID, password
 
@@ -214,10 +220,15 @@ def main(parms):
     mqparams['department'] = parms.department.strip().replace(' ','')
     mqparams['contactEmail'] = parms.contact.strip().replace(' ','')
 
-    # If a custom 'databases.xml' file is found alongside the job, include it.
+    # If a custom 'databases.xml' file is found in the job submission directory, include it.
     if os.path.isfile("databases.xml"):
         print("Found custom 'databases.xml' file...")
         mqparams['database'] = "databases.xml"
+
+    # If a custom 'modifications.xml' file is found in the job submission directory, include it.
+    if os.path.isfile("modifications.xml"):
+        print("Found custom 'modifications.xml' file...")
+        mqparams['modifications'] = "modifications.xml"
 
     # This is the top-level S3 bucket that all job folders will live under
     mqBucket = "fredhutch-maxquant-jobs"
