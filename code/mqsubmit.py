@@ -173,8 +173,8 @@ def startWorker(mqBucket, mqparams):
     volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 2) + 50 
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
-    #image_id = mqEC2worker.find_image(region)
-    image_id = 'ami-59ba7139'  # hack until ThermoFisher MSFileReader can be packaged, when fixed delete this and uncomment line above
+    image_id = mqEC2worker.find_image(region)
+    #image_id = 'ami-59ba7139'  # hack until ThermoFisher MSFileReader can be packaged, when fixed delete this and uncomment line above
     instanceID = mqEC2worker.create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, volumeSize, UserData, mqparams)
     return instanceID, password
 
