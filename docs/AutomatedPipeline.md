@@ -48,7 +48,9 @@ Next, you will need to copy the customized "databases.xml" file from the MaxQuan
 
 ![](/docs/AutomatedPipeline/databases-file.png)
 
-After your data files, sequence files, MaxQuant configuration file and databases.xml file (optional) are in a job folder that's accessible via the Rhino HPC systems, you are ready to submit your job.
+If you have created a custom modification, you can copy the modified "modifications.xml" file to your job directory exactly the procedure used for custom databases (above).
+
+After your data files, sequence files, MaxQuant configuration file, databases.xml file (optional) and modifications.xml (optional) are in a job folder that's accessible via the Rhino HPC systems, you are ready to submit your job.
 
 ## Submitting your MaxQuant Job to the pipeline
 

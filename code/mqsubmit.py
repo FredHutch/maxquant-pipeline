@@ -151,6 +151,12 @@ def uploadS3(mqBucket, jobFolder, mqparams, mqconfig):
         transfer.upload_file(mqparams['database'], mqBucket, "{0}/{1}".format(jobFolder, mqparams['database']))
         print(" Done!")
 
+    # If a custom modifications file was provided, upload it to the job folder in S3
+    if 'modifications' in mqparams:
+        sys.stdout.write("\nUploading custom modifications.xml file...")
+        transfer.upload_file(mqparams['modifications'], mqBucket, "{0}/{1}".format(jobFolder, mqparams['modifications']))
+        print(" Done!")
+
     sys.stdout.write("\nSetting Job Ready Flag...")
     # Create a file object that contains metadata about the job
     client.put_object(Body="{0},{1},{2}".format(mqparams['jobName'], mqparams['department'], mqparams['contactEmail']), Bucket = mqBucket, Key="{0}/jobCtrl/jobinfo.txt".format(jobFolder))
@@ -214,10 +220,15 @@ def main(parms):
     mqparams['department'] = parms.department.strip().replace(' ','')
     mqparams['contactEmail'] = parms.contact.strip().replace(' ','')
 
-    # If a custom 'databases.xml' file is found alongside the job, include it.
+    # If a custom 'databases.xml' file is found in the job submission directory, include it.
     if os.path.isfile("databases.xml"):
         print("Found custom 'databases.xml' file...")
         mqparams['database'] = "databases.xml"
+
+    # If a custom 'modifications.xml' file is found in the job submission directory, include it.
+    if os.path.isfile("modifications.xml"):
+        print("Found custom 'modifications.xml' file...")
+        mqparams['modifications'] = "modifications.xml"
 
     # This is the top-level S3 bucket that all job folders will live under
     mqBucket = "fredhutch-maxquant-jobs"
