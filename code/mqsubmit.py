@@ -142,7 +142,7 @@ def uploadS3(mqBucket, jobFolder, mqparams, mqconfig):
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
         print(" Done!")
     sys.stdout.write("\nUploading configuration file...")
-    transfer.upload_file(mqconfig, mqBucket, "{0}/{1}".format(jobFolder, mqconfig))
+    transfer.upload_file(mqconfig, mqBucket, "{0}/{1}".format(jobFolder, "mqpar.xml"))
     print(" Done!")
 
     # If a custom database was provided, upload it to the job folder in S3
