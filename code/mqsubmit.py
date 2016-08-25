@@ -75,12 +75,18 @@ def pickInstanceType(mzxmlFiles):
     elif fileCount <= 16:
         instanceType = "c4.4xlarge"
         threads = str(fileCount)
-    elif fileCount >= 17:
+    elif fileCount <= 126:
         instanceType = "c4.8xlarge"
         if fileCount <= 36:
             threads = str(fileCount)
         else:
             threads = "36"
+    elif fileCount >= 127:
+        instanceType = "x1.32xlarge"
+        if fileCount <= 128:
+            threads = str(fileCount)
+        else:
+            threads = "128"
     return instanceType, threads
 
 def getDataSize(datafiles):
@@ -176,7 +182,7 @@ def startWorker(mqBucket, mqparams):
     instanceType = mqparams['instanceType']
     subnetId = 'subnet-a95a0ede'
     # The volume should be twice the size of the datafiles (room for resutls) and padded 50GB for the OS.
-    volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 2) + 50 
+    volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 4) + 50 
     password = passwordGen(15)
     UserData = mqEC2worker.UserData.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = mqEC2worker.find_image(region)
