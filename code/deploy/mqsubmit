@@ -2,4 +2,4 @@
 
 module load boto3 > /dev/null 2>&1
 cmdline="$@"
-/app/maxquant/0.6b/mqsubmit.py $cmdline 
+/app/maxquant/0.7/mqsubmit.py $cmdline 
