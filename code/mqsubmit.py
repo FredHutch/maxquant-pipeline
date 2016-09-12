@@ -44,7 +44,7 @@ def adjustConfig(mqconfig, mqdir, mqparams):
             f.text = fpath 
     
     # how many threads should the job use
-    threads = pickInstanceType(filePaths)[1]
+    threads = pickInstanceType(filePaths, mqparams)[1]
     cthreads = root.find('numThreads')
     cthreads.text = threads 
 
@@ -56,12 +56,12 @@ def adjustConfig(mqconfig, mqdir, mqparams):
     return datafiles, fastas
 
 
-def pickInstanceType(mqparams):
+def pickInstanceType(fileList, mqparams):
     """
     Determine which type of EC2 instance should be used and how many threads to use 
     based on the number of datafiles the job has.
     """
-    fileCount = len(mqparams['mzxmlFiles'])
+    fileCount = len(fileList)
     if fileCount <= 2:
         instanceType = "c4.large"
         threads = str(fileCount)
@@ -264,7 +264,7 @@ def main(parms):
     # Store the file inventory and calculated instance type in the mq job dictionary
     mqparams['mzxmlFiles'] = [e.strip() for e in datafiles]
     mqparams['fastaFiles'] = [e.strip() for e in fastas]
-    mqparams['instanceType'] = pickInstanceType(mqparams)[0]
+    mqparams['instanceType'] = pickInstanceType(mqparams['mzxmlFiles'], mqparams)[0]
 
     # Make sure that this is a uniqe job (department + jobname) so a previous jobs files in S3 don't get overwritten
     if checkJobAlreadyExists(mqBucket, jobFolder):
