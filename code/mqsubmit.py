@@ -492,5 +492,10 @@ if __name__ == "__main__":
     # Check to see ensure that the requried parameters where provided and that the datafiles exist in the job directory
     checkRequiredArguments(parms, p)
 
+    # AWS API key for maxquant IAM user
+    #os.environ["AWS_ACCESS_KEY_ID"] = "KEY GOES HERE"
+    #os.environ["AWS_SECRET_ACCESS_KEY"] = "SECRET KEY GOES HERE"
+
     # Start the job
     main(parms)
+    
