@@ -56,12 +56,12 @@ def adjustConfig(mqconfig, mqdir, mqparams):
     return datafiles, fastas
 
 
-def pickInstanceType(mzxmlFiles):
+def pickInstanceType(mqparams):
     """
     Determine which type of EC2 instance should be used and how many threads to use 
     based on the number of datafiles the job has.
     """
-    fileCount = len(mzxmlFiles)
+    fileCount = len(mqparams['mzxmlFiles'])
     if fileCount <= 2:
         instanceType = "c4.large"
         threads = str(fileCount)
@@ -80,8 +80,14 @@ def pickInstanceType(mzxmlFiles):
             threads = str(fileCount)
         else:
             threads = "36"
-    elif fileCount >= 127:
+    elif fileCount >= 127 and mqparams['expidite']:
         instanceType = "x1.32xlarge"
+        if fileCount <= 128:
+            threads = str(fileCount)
+        else:
+            threads = "128"
+    elif fileCount >= 127:
+        instanceType = "c4.8xlarge"
         if fileCount <= 128:
             threads = str(fileCount)
         else:
@@ -226,6 +232,7 @@ def main(parms):
     mqparams['jobName'] = parms.jobname.strip().replace(' ','')
     mqparams['department'] = parms.department.strip().replace(' ','')
     mqparams['contactEmail'] = parms.contact.strip().replace(' ','')
+    mqparams['expidite'] = parms.expidite
 
     # If a custom 'databases.xml' file is found in the job submission directory, include it.
     if os.path.isfile("databases.xml"):
@@ -257,7 +264,7 @@ def main(parms):
     # Store the file inventory and calculated instance type in the mq job dictionary
     mqparams['mzxmlFiles'] = [e.strip() for e in datafiles]
     mqparams['fastaFiles'] = [e.strip() for e in fastas]
-    mqparams['instanceType'] = pickInstanceType(mqparams['mzxmlFiles'])[0]
+    mqparams['instanceType'] = pickInstanceType(mqparams)[0]
 
     # Make sure that this is a uniqe job (department + jobname) so a previous jobs files in S3 don't get overwritten
     if checkJobAlreadyExists(mqBucket, jobFolder):
@@ -483,9 +490,13 @@ if __name__ == "__main__":
     
     # If this flag is used it will print the information needed to connect to the remote maxquant server.
     p.add_option('-c', '--connect',  action='store_true', dest='connect', help='[OPTIONAL] Prints connection information so you can check on the running job')
-    
     # the connect option is off by default 
     p.set_defaults(connect=False)
+
+    # If this flag is used it and the job has >= 127 data files, the very large X1 (128CPU, 2TB RAM) instance type will be used; only use if speed is more important than cost
+    p.add_option('-x', '--expidite',  action='store_true', dest='expidite', help='[OPTIONAL] If used with a job containing 127+ data files, a very large server (128CPU) will be used; only use if speed is more important than cost')
+    # the connect option is off by default 
+    p.set_defaults(expidite=False)
     
     parms, args = p.parse_args()
 
@@ -498,4 +509,3 @@ if __name__ == "__main__":
 
     # Start the job
     main(parms)
-    
