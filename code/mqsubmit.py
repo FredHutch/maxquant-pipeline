@@ -12,6 +12,13 @@ import boto3
 import botocore
 import xml.etree.ElementTree as ET
 
+# Global Configuration Variables
+region = 'us-west-2'
+securityGroups = ['sg-a2dd8dc6']
+subnetId = 'subnet-a95a0ede'
+instanceProfile = 'arn:aws:iam::458818213009:instance-profile/maxquant'
+mqBucket = "fredhutch-maxquant-jobs"
+
 
 def adjustConfig(mqconfig, mqdir, mqparams):
     """
