@@ -74,24 +74,13 @@ def pickInstanceType(fileList, mqparams):
     elif fileCount <= 16:
         instanceType = "c4.4xlarge"
         threads = str(fileCount)
-    elif fileCount <= 126:
+    elif fileCount <= 36:
         instanceType = "c4.8xlarge"
-        if fileCount <= 36:
-            threads = str(fileCount)
-        else:
-            threads = "36"
-    elif fileCount >= 127 and mqparams['expedite']:
-        instanceType = "x1.32xlarge"
-        if fileCount <= 128:
-            threads = str(fileCount)
-        else:
-            threads = "128"
-    elif fileCount >= 127:
+        threads = str(fileCount)
+    elif fileCount >= 36:
         instanceType = "c4.8xlarge"
-        if fileCount <= 128:
-            threads = str(fileCount)
-        else:
-            threads = "128"
+        threads = "36"
+
     return instanceType, threads
 
 
@@ -232,7 +221,6 @@ def main(parms):
     mqparams['jobName'] = parms.jobname.strip().replace(' ','')
     mqparams['department'] = parms.department.strip().replace(' ','')
     mqparams['contactEmail'] = parms.contact.strip().replace(' ','')
-    mqparams['expedite'] = parms.expedite
 
     # If a custom 'databases.xml' file is found in the job submission directory, include it.
     if os.path.isfile("databases.xml"):
@@ -493,11 +481,6 @@ if __name__ == "__main__":
     # the connect option is off by default 
     p.set_defaults(connect=False)
 
-    # If this flag is used it and the job has >= 127 data files, the very large X1 (128CPU, 2TB RAM) instance type will be used; only use if speed is more important than cost
-    p.add_option('-x', '--expedite',  action='store_true', dest='expedite', help='[OPTIONAL] If used with a job containing 127+ data files, a very large server (128CPU) will be used; only use if speed is more important than cost')
-    # the connect option is off by default 
-    p.set_defaults(expedite=False)
-    
     parms, args = p.parse_args()
 
     # Check to see ensure that the requried parameters where provided and that the datafiles exist in the job directory
