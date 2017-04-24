@@ -177,8 +177,8 @@ def startWorker(mqBucket, mqparams, UserDataScript):
     securityGroups = ['sg-a2dd8dc6']
     instanceType = mqparams['instanceType']
     subnetId = 'subnet-a95a0ede'
-    # The volume should be twice the size of the datafiles (room for resutls) and padded 50GB for the OS.
-    volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 4) + 50 
+    # The volume should be four times the size of the datafiles (room for resutls) and padded 150GB.
+    volumeSize = (getDataSize(mqparams['mzxmlFiles']) * 4) + 150 
     password = passwordGen(15)
     UserData = UserDataScript.format(bucket = mqBucket, jobFolder = "{0}-{1}".format(mqparams['department'], mqparams['jobName']), jobContact = mqparams['contactEmail'], password = password)
     image_id = find_image(region)
