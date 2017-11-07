@@ -2,4 +2,4 @@
 
 module load boto3 > /dev/null 2>&1
 cmdline="$@"
-/app/maxquant/0.8b/mqsubmit.pex $cmdline 
+/app/maxquant/0.9/mqsubmit.pex $cmdline 
