@@ -184,4 +184,4 @@ After results bundle is download and copied to your job directory, extract it an
 
 ## Custom "databases.xml" and "modifications.xml" configurations
 
-If you need to use a custom 'databases.xml' or 'modifications.xml' configuration, just copy those files alongside you maxquant copy configuration (same directory) and the pipeline will upload an use your customizations.
+If you need to use a custom 'databases.xml' or 'modifications.xml' configuration, just copy those files alongside your maxquant configuration file (same directory) and the pipeline will upload and use your customizations.
