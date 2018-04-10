@@ -15,7 +15,7 @@ The diagram below provides a high-level view of how the automated pipeline works
 
 ## Preparing to Run an Automated MaxQuant Job
 
-The first thing that you'll need to do is create a job directory on a filesystem that is accessible via both the Rhino HPC nodes and available via a mapped drive on your local MaxQuant Workstation. The automated pipeline is currently using MaxQuant version 1.5.5.1 so it's important that you use the same version to generate the configuration for submission to the pipeline.
+The first thing that you'll need to do is create a job directory on a filesystem that is accessible via both the Rhino HPC nodes and available via a mapped drive on your local MaxQuant Workstation. The automated pipeline is currently using MaxQuant version 1.6.0.16 so it's important that you use the same version to generate the configuration for submission to the pipeline.
 
 ***Note:*** *A local copy of MaxQuant is not needed to run the job, but is needed generate a job configuration file and create a custom sequence database if required. If you don't have access to a Windows system running MaxQuant, you can use your HutchNetID to RDP (remote desktop) into the system named* "***maxquant-config.fhcrc.org***".
 
@@ -23,7 +23,7 @@ In the following example I'm going to create a job folder named "**maxquant-job0
 
 After your data and sequence files are in place, go to your MaxQuant workstation and ensure that you can access the job directory. In this example, my MaxQuant workstation can access my job folder via the path "**X:\fast\mcdermott_r\maxquant-job01**".
 
-Next, start MaxQuant (version 1.5.5.1) and load the datafiles that are located in your job folder:
+Next, start MaxQuant (version 1.6.0.x) and load the datafiles that are located in your job folder:
 
 ![](/docs/AutomatedPipeline/datafiles-path.png)
 
@@ -181,3 +181,7 @@ This link will expire on 08/19/2016 20:20:08
 When you click on the provided link (or right-click it and "save as"), it will download a results bundle to your computer. If you go the "right-click/save-as" route you can save the results bundle directly to the job directory via a mapped drive and avoid and extra copying step. In the example job that I ran, my results bundle was named **"maxquant-scicomp-job01-results-combind.zip"**.
 
 After results bundle is download and copied to your job directory, extract it and rename the extracted directory to "combined" and your job directory will look just like it would if you had run the job locally.
+
+## Custom "databases.xml" and "modifications.xml" configurations
+
+If you need to use a custom 'databases.xml' or 'modifications.xml' configuration, just copy those files alongside you maxquant copy configuration (same directory) and the pipeline will upload an use your customizations.
