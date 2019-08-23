@@ -323,7 +323,7 @@ def create_ec2worker(region, image_id, securityGroups, instanceType, subnetId, v
                 'DeviceName': '/dev/sda1',
                 'Ebs': {
                         'VolumeSize': volumeSize,
-                        'DeleteOnTermination': False,
+                        'DeleteOnTermination': True,
                         'VolumeType': 'gp2'
                         }
             }],
