@@ -466,7 +466,7 @@ Write-Host -ForegroundColor Red "bucket not found"
 
 if __name__ == "__main__":
 
-    maxquant_ver = "1.6.0.16"
+    maxquant_ver = "1.6.10.43"
 
     p = optparse.OptionParser()
     
