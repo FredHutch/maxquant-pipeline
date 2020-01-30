@@ -2,3 +2,4 @@ examplejob
 .vscode
 *.pyc
 code/creds
+*.pex
