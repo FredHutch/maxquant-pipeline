@@ -37,6 +37,34 @@ def adjustConfig(mqconfig, mqdir, mqparams):
     fastas = []
     for fastaFiles in root.findall('fastaFiles'):
         fasta = fastaFiles.findall('string')
+        # Starting in MaxQuant version 1.6.10.43 (or at least noticed then),
+        # the xml file contains a different structure for describing the fasta file(s).
+        # In previous versions it's like:
+
+        #    <fastaFiles>
+        #       <string>c:\mq-job\UP000005640_9606_human.fasta</string>
+        #    </fastaFiles>
+
+        # Now it's like this:
+
+        # <fastaFiles>
+        #     <FastaFileInfo>
+        #         <fastaFilePath>C:\mq-job\yeast_orf_trans_all_05-Jan-2010.fasta</fastaFilePath>
+        #         <identifierParseRule>>([^\s]*)</identifierParseRule>
+        #         <descriptionParseRule>>(.*)</descriptionParseRule>
+        #         <taxonomyParseRule></taxonomyParseRule>
+        #         <variationParseRule></variationParseRule>
+        #         <modificationParseRule></modificationParseRule>
+        #         <taxonomyId></taxonomyId>
+        #     </FastaFileInfo>
+        # </fastaFiles>
+
+        # Not sure if we care about anything except `fastaFilePath`.
+
+        if not fasta: # old format wasn't found, look for new
+            tmp = fastaFiles.findall('FastaFileInfo')
+            for i in tmp:
+                fasta = i.findall("fastaFilePath") 
         for f in fasta:
             ffile = (f.text).split('\\')[-1]
             fastas.append(ffile) 
@@ -53,6 +81,7 @@ def adjustConfig(mqconfig, mqdir, mqparams):
 
     # MaxQuant is a Windows program after all
     os.popen("/usr/bin/unix2dos %s >> /dev/null 2>&1" % mqconfig)
+    
     return datafiles, fastas
 
 
@@ -93,7 +122,8 @@ def getDataSize(datafiles):
     for f in datafiles:
         if os.path.isfile(f):
             total_size += os.path.getsize(f)
-    return total_size / 1000 / 1000 / 1000
+    total = total_size / 1000 / 1000 / 1000
+    return int(round(total))
 
 
 def passwordGen(plength):
@@ -138,7 +168,7 @@ def uploadS3(mqBucket, jobFolder, mqparams, mqconfig):
         sys.stdout.write("\tUploading: {0}...".format(f))
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
         print(" Done!")
-    print("\nUploading FASTA file(s)...".format(mqconfig))
+    print("\nUploading FASTA file(s)...")
     for f in mqparams['fastaFiles']:
         sys.stdout.write("\tUploading: {0}...".format(f))
         transfer.upload_file(f, mqBucket, "{0}/{1}".format(jobFolder, f))
@@ -466,7 +496,7 @@ Write-Host -ForegroundColor Red "bucket not found"
 
 if __name__ == "__main__":
 
-    maxquant_ver = "1.6.0.16"
+    maxquant_ver = "1.6.10.43"
 
     p = optparse.OptionParser()
     
@@ -495,6 +525,7 @@ if __name__ == "__main__":
     # AWS API key for maxquant IAM user
     #os.environ["AWS_ACCESS_KEY_ID"] = "KEY GOES HERE"
     #os.environ["AWS_SECRET_ACCESS_KEY"] = "SECRET KEY GOES HERE"
+
 
     # Start the job
     main(parms)
