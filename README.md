@@ -2,6 +2,13 @@
 
 ![](/docs/README/MaxQuantLogo.png)
 
+## DEPRECATION NOTICE
+
+**NOTE**: This Cloud- and Windows-based MaxQuant Pipeline is now deprecated.
+Instead, please use the [Linux version of MaxQuant](https://sciwiki.fredhutch.org/compdemos/maxquant/).
+
+---
+
 MaxQuant is a quantitative proteomics software package designed for analyzing large-scale mass-spectrometric data sets. This repository contains contains code and documentation explaining how to run MaxQuant manually or automatically via the Center's cloud based automated pipeline. 
 
 If you don't already have a copy of MaxQuant you can find instructions on how to download and install MaxQuant here: [MaxQuant Download and Installation Page](http://www.coxdocs.org/doku.php?id=maxquant:common:download_and_installation#download).
